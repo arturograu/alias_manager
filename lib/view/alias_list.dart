@@ -16,6 +16,7 @@ class AliasList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return aliases.isEmpty
         ? Text(
             'No ${selectedType.isShell ? 'shell' : 'git'} aliases found',
@@ -23,14 +24,14 @@ class AliasList extends StatelessWidget {
           )
         : ListView.separated(
             itemCount: aliases.length,
-            separatorBuilder: (_, __) => const Divider(),
+            separatorBuilder: (_, _) => Divider(color: scheme.outline),
             itemBuilder: (_, index) {
               final alias = aliases[index];
               return ListTile(
                 title: Text(alias.name),
                 subtitle: Text(alias.command),
                 trailing: IconButton(
-                  icon: const Icon(Icons.delete),
+                  icon: Icon(Icons.delete, color: scheme.error),
                   // TODO: Add provider so we can call the `GitAliasSource` methods
                   // directly without needing to pass it around.
                   // This will also allow us to split the UI in a cleaner way.

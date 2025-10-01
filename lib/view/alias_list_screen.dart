@@ -4,6 +4,7 @@ import 'package:alias_manager/sources/shell_alias_source.dart';
 import 'package:alias_manager/view/alias_form.dart';
 import 'package:alias_manager/view/alias_list.dart';
 import 'package:alias_manager/view/alias_type_selector.dart';
+import 'package:alias_manager/view/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
 class AliasListScreen extends StatefulWidget {
@@ -102,39 +103,54 @@ class _AliasListScreenState extends State<AliasListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            AliasTypeSelector(
-              selectedType: _selectedType,
-              onChanged: (type) async {
-                setState(() {
-                  _selectedType = type;
-                });
-                await _loadAliases();
-              },
-            ),
-            const SizedBox(height: 20),
-            AliasForm(
-              nameHint: 'e.g. ${_selectedType.isShell ? 'll' : 'lg'}',
-              commandHint:
-                  'e.g. ${_selectedType.isShell ? 'ls -alF' : 'log --oneline'}',
-              nameController: _nameController,
-              commandController: _commandController,
-              onAddAlias: _addAlias,
-            ),
-            const SizedBox(height: 18),
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : AliasList(
-                      aliases: _aliases,
-                      selectedType: _selectedType,
-                      onDeleteAlias: _deleteAlias,
-                    ),
-            ),
-          ],
+      body: AppLayoutWrapper(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 36),
+          child: Column(
+            children: [
+              AliasTypeSelector(
+                selectedType: _selectedType,
+                onChanged: (type) async {
+                  setState(() {
+                    _selectedType = type;
+                  });
+                  await _loadAliases();
+                },
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: AppCard(
+                  child: Column(
+                    children: [
+                      AppInnerCard(
+                        child: AliasForm(
+                          nameHint: _selectedType.isShell ? 'll' : 'lg',
+                          commandHint: _selectedType.isShell
+                              ? 'ls -alF'
+                              : 'log --oneline',
+                          nameController: _nameController,
+                          commandController: _commandController,
+                          onAddAlias: _addAlias,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Expanded(
+                        child: AppInnerCard(
+                          child: _isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : AliasList(
+                                  aliases: _aliases,
+                                  selectedType: _selectedType,
+                                  onDeleteAlias: _deleteAlias,
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
