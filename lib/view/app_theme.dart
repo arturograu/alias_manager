@@ -82,4 +82,16 @@ var appTheme = ThemeData.light().copyWith(
       fontWeight: FontWeight.w500,
     ),
   ),
+  segmentedButtonTheme: SegmentedButtonThemeData(
+    style: SegmentedButton.styleFrom(
+      backgroundColor: Colors.white.withAlpha(80),
+      foregroundColor: AppColors.onSurfaceVar,
+      selectedBackgroundColor: AppColors.primary,
+      selectedForegroundColor: Colors.white,
+      elevation: 0,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      side: BorderSide.none,
+    ).copyWith(elevation: WidgetStateProperty.all(0)),
+  ),
 );

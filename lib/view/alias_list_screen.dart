@@ -4,6 +4,8 @@ import 'package:alias_manager/sources/shell_alias_source.dart';
 import 'package:alias_manager/view/alias_form.dart';
 import 'package:alias_manager/view/alias_list.dart';
 import 'package:alias_manager/view/alias_type_selector.dart';
+import 'package:alias_manager/view/app_main_bar.dart';
+import 'package:alias_manager/view/app_theme.dart';
 import 'package:alias_manager/view/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -103,12 +105,13 @@ class _AliasListScreenState extends State<AliasListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AppLayoutWrapper(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 36),
-          child: Column(
-            children: [
-              AliasTypeSelector(
+      body: Container(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
+        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: Column(
+          children: [
+            AppMainBar(
+              child: AliasTypeSelector(
                 selectedType: _selectedType,
                 onChanged: (type) async {
                   setState(() {
@@ -117,8 +120,10 @@ class _AliasListScreenState extends State<AliasListScreen> {
                   await _loadAliases();
                 },
               ),
-              const SizedBox(height: 20),
-              Expanded(
+            ),
+            const SizedBox(height: 20),
+            Expanded(
+              child: AppLayoutWrapper(
                 child: AppCard(
                   child: Column(
                     children: [
@@ -149,8 +154,8 @@ class _AliasListScreenState extends State<AliasListScreen> {
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

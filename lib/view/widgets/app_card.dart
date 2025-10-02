@@ -2,8 +2,9 @@ import 'package:alias_manager/view/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class AppCard extends StatelessWidget {
-  const AppCard({super.key, required this.child});
+  const AppCard({super.key, required this.child, this.padding = 16});
 
+  final double padding;
   final Widget child;
 
   @override
@@ -20,7 +21,7 @@ class AppCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(padding: const EdgeInsets.all(16), child: child),
+      child: Padding(padding: EdgeInsets.all(padding), child: child),
     );
   }
 }
