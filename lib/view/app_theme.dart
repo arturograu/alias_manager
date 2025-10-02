@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ThemeConstants {
   static const cardBorderRadius = 24.0;
@@ -33,7 +34,8 @@ class AppColors {
   );
 }
 
-var appTheme = ThemeData.light().copyWith(
+final appTheme = ThemeData.light().copyWith(
+  primaryTextTheme: GoogleFonts.poppinsTextTheme(),
   colorScheme: ColorScheme(
     brightness: Brightness.light,
     primary: AppColors.primary,
@@ -52,6 +54,7 @@ var appTheme = ThemeData.light().copyWith(
   scaffoldBackgroundColor: Colors.transparent,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
+      textStyle: GoogleFonts.poppins().copyWith(fontWeight: FontWeight.w500),
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       elevation: 0,
@@ -66,16 +69,27 @@ var appTheme = ThemeData.light().copyWith(
     ),
   ),
   textTheme: ThemeData.light().textTheme.copyWith(
-    bodyLarge: TextStyle(color: AppColors.onSurface),
-    bodyMedium: TextStyle(color: AppColors.onSurfaceVar),
-    bodySmall: TextStyle(color: AppColors.onSurfaceLight),
+    bodyLarge: TextStyle(
+      color: AppColors.onSurface,
+      fontFamily: GoogleFonts.poppins().fontFamily,
+    ),
+    bodyMedium: TextStyle(
+      color: AppColors.onSurfaceVar,
+      fontFamily: GoogleFonts.poppins().fontFamily,
+    ),
+    bodySmall: TextStyle(
+      color: AppColors.onSurfaceLight,
+      fontFamily: GoogleFonts.poppins().fontFamily,
+    ),
     headlineLarge: TextStyle(
       color: AppColors.onSurface,
       fontWeight: FontWeight.w600,
+      fontFamily: GoogleFonts.poppins().fontFamily,
     ),
     headlineMedium: TextStyle(
       color: AppColors.onSurface,
       fontWeight: FontWeight.w500,
+      fontFamily: GoogleFonts.poppins().fontFamily,
     ),
   ),
   segmentedButtonTheme: SegmentedButtonThemeData(
