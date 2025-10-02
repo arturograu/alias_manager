@@ -10,18 +10,15 @@ class AppColors {
   static const surfaceVariant = Color(0xFFF1F3F4);
   static const outline = Color(0xFFE8EAED);
 
-  static const primary = Color(0xFF1A73E8); // blue accent
-  static const secondary = Color(0xFF8AB4F8); // light blue
-  static const tertiary = Color(0xFFC58AF9); // purple accent
-  static const success = Color(0xFF81C995); // green from the interface
-  static const accent = Color(0xFF9AA0A6); // neutral gray
+  static const primary = Color(0xFF323232);
+  static const secondary = Color(0xFF5F6368);
+  static const dark = Color(0xFF202124);
 
-  static const dark = Color(0xFF323232); // dark button/text
-  static const darkSurface = Color(0xFF3C4043); // dark surfaces
+  static const darkSurface = Color(0xFF3C4043);
 
-  static const onSurface = Color(0xFF202124); // dark gray
-  static const onSurfaceVar = Color(0xFF5F6368); // medium gray
-  static const onSurfaceLight = Color(0xFF9AA0A6); // light gray
+  static const onSurface = Color(0xFF202124);
+  static const onSurfaceVar = Color(0xFF5F6368);
+  static const onSurfaceLight = Color(0xFF9AA0A6);
 
   static const error = Color(0xFFEA4335);
   static const onError = Colors.white;
@@ -43,7 +40,6 @@ var appTheme = ThemeData.light().copyWith(
     onPrimary: Colors.white,
     secondary: AppColors.secondary,
     onSecondary: AppColors.dark,
-    tertiary: AppColors.tertiary,
     onTertiary: Colors.white,
     surface: AppColors.surface,
     onSurface: AppColors.onSurface,
@@ -56,7 +52,7 @@ var appTheme = ThemeData.light().copyWith(
   scaffoldBackgroundColor: Colors.transparent,
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: AppColors.dark,
+      backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       elevation: 0,
       padding: ThemeConstants.pillPadding,
@@ -64,7 +60,7 @@ var appTheme = ThemeData.light().copyWith(
   ),
   iconButtonTheme: IconButtonThemeData(
     style: IconButton.styleFrom(
-      backgroundColor: AppColors.dark,
+      backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       elevation: 0,
     ),
@@ -93,5 +89,8 @@ var appTheme = ThemeData.light().copyWith(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
       side: BorderSide.none,
     ).copyWith(elevation: WidgetStateProperty.all(0)),
+  ),
+  progressIndicatorTheme: ProgressIndicatorThemeData(
+    color: AppColors.darkSurface,
   ),
 );

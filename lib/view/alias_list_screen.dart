@@ -156,16 +156,14 @@ class _AliasListScreenState extends State<AliasListScreen>
                       const SizedBox(height: 18),
                       Expanded(
                         child: AppInnerCard(
-                          child: _isLoading
-                              ? const Center(child: CircularProgressIndicator())
-                              : FadeTransition(
-                                  opacity: _fadeInController,
-                                  child: AliasList(
-                                    aliases: _aliases,
-                                    selectedType: _selectedType,
-                                    onDeleteAlias: _deleteAlias,
-                                  ),
-                                ),
+                          child: FadeTransition(
+                            opacity: _fadeInController,
+                            child: AliasList(
+                              aliases: _aliases,
+                              selectedType: _selectedType,
+                              onDeleteAlias: _deleteAlias,
+                            ),
+                          ),
                         ),
                       ),
                     ],
