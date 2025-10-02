@@ -23,9 +23,11 @@ class AliasListScreen extends StatefulWidget {
   State<AliasListScreen> createState() => _AliasListScreenState();
 }
 
-class _AliasListScreenState extends State<AliasListScreen> {
+class _AliasListScreenState extends State<AliasListScreen>
+    with TickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
+  late AnimationController _fadeInController;
 
   bool _isLoading = false;
   List<Alias> _aliases = [];
@@ -35,6 +37,7 @@ class _AliasListScreenState extends State<AliasListScreen> {
 
   Future<void> _loadAliases() async {
     try {
+      await _fadeInController.reverse();
       setState(() {
         _isLoading = true;
       });
@@ -43,7 +46,9 @@ class _AliasListScreenState extends State<AliasListScreen> {
         _aliases = aliases;
         _isLoading = false;
       });
+      await _fadeInController.forward();
     } catch (e) {
+      await _fadeInController.forward();
       setState(() {
         _isLoading = false;
       });
@@ -99,7 +104,17 @@ class _AliasListScreenState extends State<AliasListScreen> {
   @override
   void initState() {
     super.initState();
+    _fadeInController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
     _loadAliases();
+  }
+
+  @override
+  void dispose() {
+    _fadeInController.dispose();
+    super.dispose();
   }
 
   @override
@@ -143,10 +158,13 @@ class _AliasListScreenState extends State<AliasListScreen> {
                         child: AppInnerCard(
                           child: _isLoading
                               ? const Center(child: CircularProgressIndicator())
-                              : AliasList(
-                                  aliases: _aliases,
-                                  selectedType: _selectedType,
-                                  onDeleteAlias: _deleteAlias,
+                              : FadeTransition(
+                                  opacity: _fadeInController,
+                                  child: AliasList(
+                                    aliases: _aliases,
+                                    selectedType: _selectedType,
+                                    onDeleteAlias: _deleteAlias,
+                                  ),
                                 ),
                         ),
                       ),
