@@ -1,5 +1,6 @@
-import 'package:flutter/widgets.dart';
-import 'package:hux/hux.dart';
+import 'package:alias_manager/view/widgets/app_button.dart';
+import 'package:alias_manager/view/widgets/app_text_field.dart';
+import 'package:flutter/material.dart';
 
 class AliasForm extends StatelessWidget {
   const AliasForm({
@@ -23,33 +24,27 @@ class AliasForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Flexible(
-          child: HuxTextField(
+          child: AppTextField(
             controller: nameController,
-            label: 'Alias name',
-            hint: nameHint,
+            labelText: 'Alias name',
+            hintText: nameHint,
           ),
         ),
         const SizedBox(width: 8),
         Flexible(
           flex: 2,
-          child: HuxTextField(
+          child: AppTextField(
             controller: commandController,
-            label: 'Command',
-            hint: commandHint,
-            onSubmitted: (_) => onAddAlias(),
+            labelText: 'Command',
+            hintText: commandHint,
           ),
         ),
         const SizedBox(width: 8),
-        Padding(
-          padding: const EdgeInsets.only(top: 22),
-          child: SizedBox(
-            height: 46,
-            child: HuxButton(
-              key: Key('add_alias_button'),
-              onPressed: onAddAlias,
-              child: Text('Add'),
-            ),
-          ),
+        AppButton.icon(
+          key: Key('add_alias_button'),
+          onPressed: onAddAlias,
+          icon: Icons.add,
+          child: Text('Add'),
         ),
       ],
     );

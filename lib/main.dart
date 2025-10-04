@@ -1,8 +1,8 @@
 import 'package:alias_manager/sources/git_alias_source.dart';
 import 'package:alias_manager/sources/shell_alias_source.dart';
 import 'package:alias_manager/view/alias_list_screen.dart';
+import 'package:alias_manager/view/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:hux/hux.dart';
 
 void main() {
   runApp(
@@ -27,9 +27,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Alias Manager',
-      theme: HuxTheme.lightTheme,
-      darkTheme: HuxTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      theme: appTheme,
+      themeMode: ThemeMode.light,
       home: AliasListScreen(
         shellAliasSource: shellAliasSource,
         gitAliasSource: gitAliasSource,

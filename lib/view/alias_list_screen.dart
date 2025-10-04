@@ -4,6 +4,9 @@ import 'package:alias_manager/sources/shell_alias_source.dart';
 import 'package:alias_manager/view/alias_form.dart';
 import 'package:alias_manager/view/alias_list.dart';
 import 'package:alias_manager/view/alias_type_selector.dart';
+import 'package:alias_manager/view/app_main_bar.dart';
+import 'package:alias_manager/view/app_theme.dart';
+import 'package:alias_manager/view/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
 class AliasListScreen extends StatefulWidget {
@@ -20,9 +23,11 @@ class AliasListScreen extends StatefulWidget {
   State<AliasListScreen> createState() => _AliasListScreenState();
 }
 
-class _AliasListScreenState extends State<AliasListScreen> {
+class _AliasListScreenState extends State<AliasListScreen>
+    with TickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
+  late AnimationController _fadeInController;
 
   bool _isLoading = false;
   List<Alias> _aliases = [];
@@ -32,6 +37,7 @@ class _AliasListScreenState extends State<AliasListScreen> {
 
   Future<void> _loadAliases() async {
     try {
+      await _fadeInController.reverse();
       setState(() {
         _isLoading = true;
       });
@@ -40,7 +46,9 @@ class _AliasListScreenState extends State<AliasListScreen> {
         _aliases = aliases;
         _isLoading = false;
       });
+      await _fadeInController.forward();
     } catch (e) {
+      await _fadeInController.forward();
       setState(() {
         _isLoading = false;
       });
@@ -96,43 +104,72 @@ class _AliasListScreenState extends State<AliasListScreen> {
   @override
   void initState() {
     super.initState();
+    _fadeInController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
     _loadAliases();
+  }
+
+  @override
+  void dispose() {
+    _fadeInController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: Container(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
+        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
         child: Column(
           children: [
-            AliasTypeSelector(
-              selectedType: _selectedType,
-              onChanged: (type) async {
-                setState(() {
-                  _selectedType = type;
-                });
-                await _loadAliases();
-              },
+            AppMainBar(
+              child: AliasTypeSelector(
+                selectedType: _selectedType,
+                onChanged: (type) async {
+                  setState(() {
+                    _selectedType = type;
+                  });
+                  await _loadAliases();
+                },
+              ),
             ),
             const SizedBox(height: 20),
-            AliasForm(
-              nameHint: 'e.g. ${_selectedType.isShell ? 'll' : 'lg'}',
-              commandHint:
-                  'e.g. ${_selectedType.isShell ? 'ls -alF' : 'log --oneline'}',
-              nameController: _nameController,
-              commandController: _commandController,
-              onAddAlias: _addAlias,
-            ),
-            const SizedBox(height: 18),
             Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : AliasList(
-                      aliases: _aliases,
-                      selectedType: _selectedType,
-                      onDeleteAlias: _deleteAlias,
-                    ),
+              child: AppLayoutWrapper(
+                child: AppCard(
+                  child: Column(
+                    children: [
+                      AppInnerCard(
+                        child: AliasForm(
+                          nameHint: _selectedType.isShell ? 'll' : 'lg',
+                          commandHint: _selectedType.isShell
+                              ? 'ls -alF'
+                              : 'log --oneline',
+                          nameController: _nameController,
+                          commandController: _commandController,
+                          onAddAlias: _addAlias,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Expanded(
+                        child: AppInnerCard(
+                          child: FadeTransition(
+                            opacity: _fadeInController,
+                            child: AliasList(
+                              aliases: _aliases,
+                              selectedType: _selectedType,
+                              onDeleteAlias: _deleteAlias,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
