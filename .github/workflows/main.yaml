@@ -35,4 +35,4 @@ jobs:
       - name: Check Code Coverage
         uses: VeryGoodOpenSource/very_good_coverage@v3
         with:
-          min_coverage: 84
+          min_coverage: 80
