@@ -2,7 +2,7 @@
 
 A cross-platform desktop Flutter app to view, add, and manage your global command aliases — both for Git and your shell (e.g., Bash, Zsh).
 
-![Demo of Alias Manager](demo.gif)
+![Demo of Alias Manager](docs/demo.gif)
 
 ## About the project
 
