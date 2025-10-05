@@ -1,243 +1,354 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <link rel="icon" type="image/x-icon" href="favicon.png" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <meta charset="utf-8" />
-    <title>Alias Manager — Download</title>
+    <title>Alias Manager - Manage Git & Shell Aliases | Free Desktop App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="A tiny desktop app to manage your Git and shell aliases."
+      content="Free desktop app to easily manage your Git and shell aliases. Create, edit, and organize command aliases with a beautiful, intuitive interface. Available for macOS, Windows, and Linux."
     />
+    <meta
+      name="keywords"
+      content="git aliases, shell aliases, command line, terminal, productivity, developer tools, macOS, Windows, Linux, Flutter app"
+    />
+    <meta name="author" content="Fluttered" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://arturograu.github.io/alias_manager/"
+    />
+    <meta
+      property="og:title"
+      content="Alias Manager - Manage Git & Shell Aliases"
+    />
+    <meta
+      property="og:description"
+      content="Free desktop app to easily manage your Git and shell aliases with a beautiful, intuitive interface."
+    />
+    <meta
+      property="og:image"
+      content="https://arturograu.github.io/alias_manager/logo_web.png"
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta
+      property="twitter:url"
+      content="https://arturograu.github.io/alias_manager/"
+    />
+    <meta
+      property="twitter:title"
+      content="Alias Manager - Manage Git & Shell Aliases"
+    />
+    <meta
+      property="twitter:description"
+      content="Free desktop app to easily manage your Git and shell aliases with a beautiful, intuitive interface."
+    />
+    <meta
+      property="twitter:image"
+      content="https://arturograu.github.io/alias_manager/logo_web.png"
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://arturograu.github.io/alias_manager/" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
-    <style>
-      :root {
-        --bg: #0b1020;
-        --panel: #12172b;
-        --muted: #a7b0c6;
-        --text: #eef1ff;
-        --line: #1f2742;
-        --accent: #7c5cff;
-        --accent-2: #4fd1c5;
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-        --radius: 18px;
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Alias Manager",
+        "description": "Free desktop app to easily manage your Git and shell aliases with a beautiful, intuitive interface.",
+        "url": "https://arturograu.github.io/alias_manager/",
+        "author": {
+          "@type": "Organization",
+          "name": "Fluttered"
+        },
+        "operatingSystem": ["macOS", "Windows", "Linux"],
+        "applicationCategory": "DeveloperApplication",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "downloadUrl": "https://github.com/arturograu/alias_manager/releases/latest/download/alias_manager.dmg",
+        "softwareVersion": "1.0.0",
+        "datePublished": "2024-01-01"
       }
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-          Roboto, Arial;
-        color: var(--text);
-        background: radial-gradient(
-              1200px 600px at 10% 10%,
-              #11173a 0%,
-              transparent 60%
-            )
-            no-repeat,
-          radial-gradient(900px 500px at 90% 0%, #1a2047 0%, transparent 55%)
-            no-repeat,
-          var(--bg);
-        display: grid;
-        place-items: center;
-        padding: 32px;
-      }
-      .card {
-        width: min(860px, 100%);
-        background: linear-gradient(180deg, #12172b, #0f1430);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        padding: 28px 28px 22px;
-      }
-      header {
-        display: flex;
-        gap: 16px;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-      }
-      .title {
-        display: flex;
-        gap: 14px;
-        align-items: center;
-      }
-      .logo {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        flex: 0 0 auto;
-      }
-      h1 {
-        margin: 0;
-        font-size: 26px;
-        letter-spacing: 0.2px;
-      }
-      .muted {
-        color: var(--muted);
-      }
-      .badge {
-        display: inline-block;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #ffb020, #ff6b4a);
-        color: #0b0b0b;
-        letter-spacing: 0.4px;
-        box-shadow: 0 6px 18px rgba(255, 107, 74, 0.35);
-      }
-      .hero {
-        margin: 18px 0 8px;
-      }
-      .actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin: 2px 0 8px;
-      }
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-        font-weight: 700;
-        padding: 14px 18px;
-        border-radius: 12px;
-        background: var(--accent);
-        color: white;
-        box-shadow: 0 8px 24px rgba(124, 92, 255, 0.35);
-        transform: translateY(0);
-        transition: 0.12s ease;
-      }
-      .btn:hover {
-        transform: translateY(-1px);
-      }
-      .btn.secondary {
-        background: #1f2646;
-        color: #d6dcff;
-        box-shadow: none;
-        border: 1px solid var(--line);
-      }
-      .section {
-        margin-top: 16px;
-        border-top: 1px solid var(--line);
-        padding-top: 16px;
-      }
-      pre {
-        margin: 10px 0 0;
-        background: #0e1430;
-        border: 1px solid #202752;
-        color: #cfe3ff;
-        padding: 12px;
-        border-radius: 12px;
-        overflow: auto;
-        font-size: 13px;
-        line-height: 1.45;
-      }
-      footer {
-        margin-top: 12px;
-        color: var(--muted);
-        font-size: 12px;
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      a.link {
-        color: #cfd4ff;
-      }
-    </style>
+    </script>
   </head>
   <body>
-    <main class="card">
-      <header>
-        <div class="title">
-          <div class="logo" aria-hidden="true">
-            <img
-              src="logo_web.png"
-              alt="Alias Manager Logo"
-              width="48"
-              height="48"
-            />
-          </div>
-          <div>
-            <h1>Alias Manager</h1>
-            <div class="muted">
-              Manage your Git &amp; shell aliases with a tiny desktop app.
-            </div>
-          </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="logo-section">
+          <img src="logo_web.png" alt="Alias Manager Logo" class="logo" />
+          Alias Manager
         </div>
-        <span class="badge">BETA</span>
-      </header>
+        <ul class="nav-links">
+          <li><a href="#features">Features</a></li>
+          <li><a href="#demo">Demo</a></li>
+          <li><a href="#download">Download</a></li>
+          <li>
+            <a href="https://github.com/arturograu/alias_manager">GitHub</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
 
-      <section class="hero">
-        <div class="actions">
-          <a
-            class="btn"
-            href="https://github.com/arturograu/alias_manager/releases/latest/download/alias_manager.dmg"
-          >
-            <i class="fab fa-apple"></i> Download for macOS
-          </a>
-          <a
-            class="btn secondary"
-            href="https://github.com/arturograu/alias_manager"
-          >
-            <i class="fa-solid fa-code-branch"></i> View on GitHub
-          </a>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container">
+        <div class="announcement">
+          <span class="badge">New</span>
+          Download the latest version →
         </div>
-        <p class="muted">
-          Latest notarized build for macOS. For other platforms, build locally
-          with Flutter.
+
+        <h1 class="hero-title">
+          The Simplest Way to Manage Your Command Aliases.
+        </h1>
+
+        <p class="hero-subtitle">
+          Stop editing config files manually. Create, view, and delete your Git
+          and shell aliases with a clean, intuitive interface. Just type the
+          alias name and command – we handle the rest.
         </p>
-      </section>
 
-      <section class="section">
-        <h3 style="margin: 0 0 6px">Build it yourself (Windows / Linux)</h3>
-        <div style="display: grid; gap: 10px">
-          <div>
-            <strong>Windows</strong>
+        <div class="cta-buttons">
+          <a
+            class="btn btn-primary"
+            href="https://github.com/arturograu/alias_manager/releases/latest/download/alias_manager.dmg"
+            aria-label="Download Alias Manager for macOS"
+          >
+            <i class="fab fa-apple" aria-hidden="true"></i>
+            Download for macOS
+          </a>
+          <a
+            class="btn btn-secondary"
+            href="#demo"
+            aria-label="See how Alias Manager works"
+          >
+            <i class="fas fa-play" aria-hidden="true"></i>
+            See How it works
+          </a>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Simple input fields</div>
+          </div>
+          <div class="stat">
+            <div class="stat-number">1</div>
+            <div class="stat-label">Click to add</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="content-section">
+      <div class="container">
+        <div class="demo-section">
+          <h2 class="section-title">See It In Action</h2>
+          <p class="hero-subtitle">
+            Two input fields, one Add button. That's all you need to manage your
+            aliases.
+          </p>
+          <img
+            src="demo.gif"
+            alt="Alias Manager Demo - Simple interface with alias name and command fields"
+            class="demo-gif"
+            loading="lazy"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="content-section alt-bg">
+      <div class="container">
+        <h2 class="section-title">Simple by Design</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fas fa-plus"></i>
+            </div>
+            <h3 class="feature-title">Easy Creation</h3>
+            <p class="feature-description">
+              Just type your alias name (like "ll") and the command (like "ls
+              -alF"). Click Add and you're done.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fas fa-list"></i>
+            </div>
+            <h3 class="feature-title">Clear Overview</h3>
+            <p class="feature-description">
+              See all your aliases in a clean list. Each shows the alias name
+              and its corresponding command at a glance.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fas fa-trash"></i>
+            </div>
+            <h3 class="feature-title">One-Click Delete</h3>
+            <p class="feature-description">
+              Remove any alias instantly with the red delete button. No
+              confirmation dialogs, just clean and fast.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fas fa-toggle-on"></i>
+            </div>
+            <h3 class="feature-title">Git & Shell Support</h3>
+            <p class="feature-description">
+              Switch between Git and shell aliases with a simple toggle. Manage
+              both types from one interface.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fas fa-feather"></i>
+            </div>
+            <h3 class="feature-title">Lightweight</h3>
+            <p class="feature-description">
+              No bloat, no complexity. Just the essential features you need to
+              manage your command aliases efficiently.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fas fa-desktop"></i>
+            </div>
+            <h3 class="feature-title">Native Desktop</h3>
+            <p class="feature-description">
+              Built with Flutter for smooth performance on macOS, Windows, and
+              Linux. Feels native on every platform.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download Section -->
+    <section id="download" class="content-section">
+      <div class="container">
+        <h2 class="section-title">Get Started Today</h2>
+        <div class="features-grid download-grid">
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fab fa-apple"></i>
+            </div>
+            <h3 class="feature-title">macOS</h3>
+            <p class="feature-description">
+              Download the latest notarized build for macOS. Ready to use
+              immediately.
+            </p>
+            <a
+              class="btn btn-primary"
+              href="https://github.com/arturograu/alias_manager/releases/latest/download/alias_manager.dmg"
+              style="margin-top: 20px"
+            >
+              <i class="fas fa-download" aria-hidden="true"></i>
+              Download DMG
+            </a>
+          </div>
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fab fa-windows"></i>
+            </div>
+            <h3 class="feature-title">Windows</h3>
+            <p class="feature-description">
+              Build from source with Flutter for Windows desktop.
+            </p>
             <pre>
 flutter config --enable-windows-desktop
 flutter pub get
 flutter build windows</pre
             >
+            <div style="margin-top: 16px">
+              <a
+                class="btn btn-secondary"
+                href="https://github.com/arturograu/alias_manager"
+                style="font-size: 14px; padding: 12px 20px"
+              >
+                <i class="fab fa-github" aria-hidden="true"></i>
+                View Repository
+              </a>
+            </div>
           </div>
-          <div>
-            <strong>Linux</strong>
+          <div class="feature-card">
+            <div class="new-feature-icon">
+              <i class="fab fa-linux"></i>
+            </div>
+            <h3 class="feature-title">Linux</h3>
+            <p class="feature-description">
+              Build from source with Flutter for Linux desktop.
+            </p>
             <pre>
 flutter config --enable-linux-desktop
 flutter pub get
 flutter build linux</pre
             >
+            <div style="margin-top: 16px">
+              <a
+                class="btn btn-secondary"
+                href="https://github.com/arturograu/alias_manager"
+                style="font-size: 14px; padding: 12px 20px"
+              >
+                <i class="fab fa-github" aria-hidden="true"></i>
+                View Repository
+              </a>
+            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <footer>
-        <span
-          >Need help or have feedback? Open an issue on
-          <a
-            class="link"
-            href="https://github.com/arturograu/alias_manager/issues"
-            >GitHub</a
-          >.</span
-        >
-        <span
-          >©
-          <script>
-            document.write(new Date().getFullYear());
-          </script>
-          Fluttered</span
-        >
-      </footer>
-    </main>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div>
+            <p>
+              Need help or have feedback? Open an issue on
+              <a href="https://github.com/arturograu/alias_manager/issues"
+                >GitHub</a
+              >.
+            </p>
+            <p style="margin-top: 8px; font-size: 14px">
+              Made with ❤️ using Flutter • Open Source • Privacy Focused
+            </p>
+          </div>
+          <div>
+            ©
+            <script>
+              document.write(new Date().getFullYear());
+            </script>
+            Fluttered
+          </div>
+        </div>
+      </div>
+    </footer>
   </body>
 </html>
