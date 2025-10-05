@@ -106,7 +106,11 @@
           <li><a href="#demo">Demo</a></li>
           <li><a href="#download">Download</a></li>
           <li>
-            <a href="https://github.com/arturograu/alias_manager">GitHub</a>
+            <a
+              href="https://github.com/arturograu/alias_manager"
+              target="_blank"
+              >GitHub</a
+            >
           </li>
         </ul>
       </div>
@@ -115,10 +119,12 @@
     <!-- Hero Section -->
     <section class="hero-section">
       <div class="container">
-        <div class="announcement">
-          <span class="badge">New</span>
-          Download the latest version →
-        </div>
+        <a href="#download">
+          <div class="announcement">
+            <span class="badge">New</span>
+            Download the latest version →
+          </div>
+        </a>
 
         <h1 class="hero-title">
           The Simplest Way to Manage Your Command Aliases.
@@ -352,3 +358,15 @@ flutter build linux</pre
     </footer>
   </body>
 </html>
+
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
+      e.preventDefault();
+
+      document.querySelector(this.getAttribute("href")).scrollIntoView({
+        behavior: "smooth",
+      });
+    });
+  });
+</script>

@@ -99,7 +99,9 @@ body::after {
 
 /* Navigation */
 .navbar {
-  position: relative;
+  position: sticky;
+  top: 0;
+  overflow: hidden;
   z-index: 10;
   padding: 20px 0;
   background: rgba(255, 255, 255, 0.02);
@@ -181,6 +183,17 @@ body::after {
   padding: 8px 20px;
   margin-bottom: 40px;
   backdrop-filter: blur(10px);
+  color: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.announcement:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2),
+    0 0 0 1px rgba(139, 92, 246, 0.15);
 }
 
 .announcement .badge {
@@ -249,7 +262,6 @@ body::after {
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
   box-shadow: 0 32px 64px -12px rgba(139, 92, 246, 0.4);
 }
 
@@ -262,7 +274,6 @@ body::after {
 
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
 }
 
 /* Stats section */
@@ -447,7 +458,6 @@ h3 {
   text-align: center;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
-  cursor: pointer;
 }
 
 .feature-card:hover {
