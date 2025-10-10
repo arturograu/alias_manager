@@ -12,7 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 dist/
-sign_and_notarize.sh
+.env
 notary_log.json
 
 # IntelliJ related
@@ -49,4 +49,4 @@ app.*.map.json
 /android/app/release
 
 # FVM Version Cache
-.fvm/
+.fvm/.env
