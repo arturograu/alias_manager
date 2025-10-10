@@ -31,20 +31,21 @@ codesign -f --options runtime --timestamp -s "$SIGN_ID" "$APP"
 echo "Verifying signature..."
 codesign --verify --deep --strict --verbose=2 "$APP"
 
-# Create zip for notarization
-echo "Creating zip for notarization..."
-ditto -c -k --keepParent "$APP" "$APP.zip"
+# Create DMG for notarization
+DMG="build/macos/Build/Products/Release/Alias Manager.dmg"
+echo "Creating DMG for notarization..."
+hdiutil create -volname "Alias Manager" -srcfolder "$APP" -ov -format UDZO "$DMG"
 
-# Submit for notarization using environment variables
-echo "Submitting for notarization..."
-xcrun notarytool submit "$APP.zip" \
+# Submit DMG for notarization
+echo "Submitting DMG for notarization..."
+xcrun notarytool submit "$DMG" \
     --apple-id "$APPLE_ID" \
     --password "$APPLE_APP_SPECIFIC_PASSWORD" \
     --team-id "$APPLE_TEAM_ID" \
     --wait
 
-# Staple the notarization
-echo "Stapling notarization..."
-xcrun stapler staple "$APP"
+# Staple the notarization to the DMG
+echo "Stapling notarization to DMG..."
+xcrun stapler staple "$DMG"
 
 echo "Process complete!"
