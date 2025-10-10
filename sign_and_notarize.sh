@@ -9,8 +9,22 @@ fi
 APP="build/macos/Build/Products/Release/Alias Manager.app"
 SIGN_ID=$(security find-identity -v -p codesigning | grep "Developer ID Application" | head -n1 | awk '{print $2}')
 
-# Sign the app
-echo "Signing application..."
+echo "Using signing identity: $SIGN_ID"
+
+# Sign all frameworks and dylibs first
+echo "Signing embedded frameworks and libraries..."
+find "$APP" -name "*.framework" -type d | while read framework; do
+    echo "Signing framework: $framework"
+    codesign -f --options runtime --timestamp -s "$SIGN_ID" "$framework"
+done
+
+find "$APP" -name "*.dylib" -type f | while read dylib; do
+    echo "Signing dylib: $dylib"
+    codesign -f --options runtime --timestamp -s "$SIGN_ID" "$dylib"
+done
+
+# Sign the main app bundle
+echo "Signing main application..."
 codesign -f --options runtime --timestamp -s "$SIGN_ID" "$APP"
 
 # Verify signing
