@@ -1,7 +1,7 @@
-import 'package:alias_manager/sources/alias_source.dart';
-import 'package:alias_manager/sources/git_alias_source.dart';
-import 'package:alias_manager/sources/shell_alias_source.dart';
-import 'package:alias_manager/view/alias_list_screen.dart';
+import 'package:alias_manager/data/alias_service/alias_service.dart';
+import 'package:alias_manager/data/alias_service/git_alias_service.dart';
+import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
+import 'package:alias_manager/presentation/alias_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

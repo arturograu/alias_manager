@@ -1,5 +1,5 @@
 import 'package:alias_manager/gen/assets.gen.dart';
-import 'package:alias_manager/view/widgets/widgets.dart';
+import 'package:alias_manager/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 

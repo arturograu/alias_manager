@@ -616,6 +616,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  system_command_runner:
+    dependency: "direct main"
+    description:
+      name: system_command_runner
+      sha256: b74393303f78a8650ad92cb356595d16a6bf1ef528813d3c2fff391dcff2f52f
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   term_glyph:
     dependency: transitive
     description:

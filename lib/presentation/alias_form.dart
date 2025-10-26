@@ -1,5 +1,5 @@
-import 'package:alias_manager/view/widgets/app_button.dart';
-import 'package:alias_manager/view/widgets/app_text_field.dart';
+import 'package:alias_manager/presentation/widgets/app_button.dart';
+import 'package:alias_manager/presentation/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 
 class AliasForm extends StatelessWidget {

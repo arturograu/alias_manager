@@ -1,12 +1,12 @@
-import 'package:alias_manager/sources/alias_source.dart';
-import 'package:alias_manager/sources/git_alias_source.dart';
-import 'package:alias_manager/sources/shell_alias_source.dart';
-import 'package:alias_manager/view/alias_form.dart';
-import 'package:alias_manager/view/alias_list.dart';
-import 'package:alias_manager/view/alias_type_selector.dart';
-import 'package:alias_manager/view/app_main_bar.dart';
-import 'package:alias_manager/view/app_theme.dart';
-import 'package:alias_manager/view/widgets/widgets.dart';
+import 'package:alias_manager/data/alias_service/alias_service.dart';
+import 'package:alias_manager/data/alias_service/git_alias_service.dart';
+import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
+import 'package:alias_manager/presentation/alias_form.dart';
+import 'package:alias_manager/presentation/alias_list.dart';
+import 'package:alias_manager/presentation/alias_type_selector.dart';
+import 'package:alias_manager/presentation/app_main_bar.dart';
+import 'package:alias_manager/presentation/app_theme.dart';
+import 'package:alias_manager/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
 class AliasListScreen extends StatefulWidget {
