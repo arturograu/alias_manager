@@ -1,12 +1,14 @@
-import 'package:alias_manager/shell/system_command_runner.dart';
-import 'package:alias_manager/sources/alias_source.dart';
+import 'package:alias_manager/data/alias_service/alias_service.dart';
+import 'package:system_command_runner/system_command_runner.dart';
 
 class GitAliasSource implements AliasSource {
   GitAliasSource({SystemCommandRunner? commandRunner})
-    : _commandRunner = commandRunner ?? SystemCommandRunner();
+    : _commandRunner = commandRunner ?? const SystemCommandRunner();
 
   final SystemCommandRunner _commandRunner;
 
+  // TODO(arturograu): maybe we can find a way to improve the
+  // system_command_runner package to handle this better.
   // Should be bigger bigger than 1 since 0 is a valid exit code and 1 is used
   // for valid but empty content.
   bool _isInvalidExitCode(int exitCode) => exitCode > 1;

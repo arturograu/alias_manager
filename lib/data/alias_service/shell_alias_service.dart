@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:alias_manager/shell/system_command_runner.dart';
-import 'package:alias_manager/sources/alias_source.dart';
+import 'package:alias_manager/data/alias_service/alias_service.dart';
+import 'package:system_command_runner/system_command_runner.dart';
 
 class ShellAliasSource implements AliasSource {
   ShellAliasSource({SystemCommandRunner? commandRunner})
-    : _commandRunner = commandRunner ?? SystemCommandRunner(),
+    : _commandRunner = commandRunner ?? const SystemCommandRunner(),
       _shell = _detectShell(),
       _rcFile = _detectRcFile();
 
