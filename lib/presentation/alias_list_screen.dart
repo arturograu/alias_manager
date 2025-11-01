@@ -20,7 +20,6 @@ class _AliasListScreenState extends ConsumerState<AliasListScreen>
     with TickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
-  late AnimationController _fadeInController;
 
   bool _isLoading = false;
   List<Alias> _aliases = [];
@@ -32,7 +31,6 @@ class _AliasListScreenState extends ConsumerState<AliasListScreen>
 
   Future<void> _loadAliases() async {
     try {
-      await _fadeInController.reverse();
       setState(() {
         _isLoading = true;
       });
@@ -41,9 +39,7 @@ class _AliasListScreenState extends ConsumerState<AliasListScreen>
         _aliases = aliases;
         _isLoading = false;
       });
-      await _fadeInController.forward();
     } catch (e) {
-      await _fadeInController.forward();
       setState(() {
         _isLoading = false;
       });
@@ -99,17 +95,7 @@ class _AliasListScreenState extends ConsumerState<AliasListScreen>
   @override
   void initState() {
     super.initState();
-    _fadeInController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
     _loadAliases();
-  }
-
-  @override
-  void dispose() {
-    _fadeInController.dispose();
-    super.dispose();
   }
 
   @override
@@ -151,13 +137,17 @@ class _AliasListScreenState extends ConsumerState<AliasListScreen>
                       const SizedBox(height: 18),
                       Expanded(
                         child: AppInnerCard(
-                          child: FadeTransition(
-                            opacity: _fadeInController,
-                            child: AliasList(
-                              aliases: _aliases,
-                              selectedType: _selectedType,
-                              onDeleteAlias: _deleteAlias,
-                            ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            child: _isLoading
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : AliasList(
+                                    aliases: _aliases,
+                                    selectedType: _selectedType,
+                                    onDeleteAlias: _deleteAlias,
+                                  ),
                           ),
                         ),
                       ),
