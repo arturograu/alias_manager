@@ -1,6 +1,5 @@
 import 'package:alias_manager/data/alias_service/alias_service.dart';
-import 'package:alias_manager/data/alias_service/git_alias_service.dart';
-import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
+import 'package:alias_manager/main.dart';
 import 'package:alias_manager/presentation/alias_form.dart';
 import 'package:alias_manager/presentation/alias_list.dart';
 import 'package:alias_manager/presentation/alias_type_selector.dart';
@@ -8,22 +7,16 @@ import 'package:alias_manager/presentation/app_main_bar.dart';
 import 'package:alias_manager/presentation/app_theme.dart';
 import 'package:alias_manager/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AliasListScreen extends StatefulWidget {
-  const AliasListScreen({
-    super.key,
-    required this.shellAliasSource,
-    required this.gitAliasSource,
-  });
-
-  final ShellAliasSource shellAliasSource;
-  final GitAliasSource gitAliasSource;
+class AliasListScreen extends ConsumerStatefulWidget {
+  const AliasListScreen({super.key});
 
   @override
-  State<AliasListScreen> createState() => _AliasListScreenState();
+  ConsumerState<AliasListScreen> createState() => _AliasListScreenState();
 }
 
-class _AliasListScreenState extends State<AliasListScreen>
+class _AliasListScreenState extends ConsumerState<AliasListScreen>
     with TickerProviderStateMixin {
   final _nameController = TextEditingController();
   final _commandController = TextEditingController();
@@ -32,8 +25,10 @@ class _AliasListScreenState extends State<AliasListScreen>
   bool _isLoading = false;
   List<Alias> _aliases = [];
   AliasType _selectedType = AliasType.shell;
-  AliasSource get _currentSource =>
-      _selectedType.isShell ? widget.shellAliasSource : widget.gitAliasSource;
+
+  AliasSource get _currentSource => _selectedType.isShell
+      ? ref.read(shellAliasServiceProvider)
+      : ref.read(gitAliasServiceProvider);
 
   Future<void> _loadAliases() async {
     try {

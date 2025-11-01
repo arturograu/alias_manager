@@ -1,8 +1,9 @@
 import 'package:alias_manager/data/alias_service/alias_service.dart';
 import 'package:alias_manager/presentation/alias_type_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AliasList extends StatelessWidget {
+class AliasList extends ConsumerWidget {
   const AliasList({
     super.key,
     required this.aliases,
@@ -15,7 +16,7 @@ class AliasList extends StatelessWidget {
   final ValueChanged<String> onDeleteAlias;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return aliases.isEmpty
         ? Text(

@@ -1,9 +1,11 @@
 import 'package:alias_manager/data/alias_service/alias_service.dart';
 import 'package:alias_manager/data/alias_service/git_alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
+import 'package:alias_manager/main.dart';
 import 'package:alias_manager/presentation/alias_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockShellAliasSource extends Mock implements ShellAliasSource {}
@@ -31,10 +33,13 @@ void main() {
         when(() => shellAliasSource.getAliases()).thenAnswer((_) async => []);
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              shellAliasSource: shellAliasSource,
-              gitAliasSource: gitAliasSource,
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: const MaterialApp(
+              home: AliasListScreen(),
             ),
           ),
         );
@@ -53,10 +58,13 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              gitAliasSource: gitAliasSource,
-              shellAliasSource: shellAliasSource,
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: const MaterialApp(
+              home: AliasListScreen(),
             ),
           ),
         );
@@ -73,10 +81,13 @@ void main() {
     group('calls', () {
       testWidgets('getAliases on init', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              gitAliasSource: gitAliasSource,
-              shellAliasSource: shellAliasSource,
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: const MaterialApp(
+              home: AliasListScreen(),
             ),
           ),
         );
@@ -91,10 +102,13 @@ void main() {
         ).thenAnswer((_) async {});
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              shellAliasSource: shellAliasSource,
-              gitAliasSource: gitAliasSource,
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: const MaterialApp(
+              home: AliasListScreen(),
             ),
           ),
         );
@@ -116,10 +130,13 @@ void main() {
         ).thenAnswer((_) async {});
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              gitAliasSource: gitAliasSource,
-              shellAliasSource: shellAliasSource,
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: const MaterialApp(
+              home: AliasListScreen(),
             ),
           ),
         );
