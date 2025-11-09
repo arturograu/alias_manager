@@ -2,10 +2,10 @@ import 'package:alias_manager/data/alias_service/alias_service.dart';
 import 'package:alias_manager/data/alias_service/git_alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
 import 'package:alias_manager/main.dart';
-import 'package:alias_manager/presentation/alias_list_screen.dart';
+import 'package:alias_manager/presentation/home/view/home_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockShellAliasSource extends Mock implements ShellAliasSource {}
@@ -38,14 +38,12 @@ void main() {
               shellAliasServiceProvider.overrideWithValue(shellAliasSource),
               gitAliasServiceProvider.overrideWithValue(gitAliasSource),
             ],
-            child: const MaterialApp(
-              home: AliasListScreen(),
-            ),
+            child: const MaterialApp(home: AliasListPage()),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.byType(AliasListScreen), findsOneWidget);
+        expect(find.byType(AliasListPage), findsOneWidget);
         expect(find.text('No shell aliases found'), findsOneWidget);
       });
 
@@ -63,14 +61,12 @@ void main() {
               shellAliasServiceProvider.overrideWithValue(shellAliasSource),
               gitAliasServiceProvider.overrideWithValue(gitAliasSource),
             ],
-            child: const MaterialApp(
-              home: AliasListScreen(),
-            ),
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.byType(AliasListScreen), findsOneWidget);
+        expect(find.byType(AliasListPage), findsOneWidget);
         expect(find.text('alias1'), findsOneWidget);
         expect(find.text('command1'), findsOneWidget);
         expect(find.text('alias2'), findsOneWidget);
@@ -86,9 +82,7 @@ void main() {
               shellAliasServiceProvider.overrideWithValue(shellAliasSource),
               gitAliasServiceProvider.overrideWithValue(gitAliasSource),
             ],
-            child: const MaterialApp(
-              home: AliasListScreen(),
-            ),
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
 
@@ -107,9 +101,7 @@ void main() {
               shellAliasServiceProvider.overrideWithValue(shellAliasSource),
               gitAliasServiceProvider.overrideWithValue(gitAliasSource),
             ],
-            child: const MaterialApp(
-              home: AliasListScreen(),
-            ),
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
 
@@ -135,9 +127,7 @@ void main() {
               shellAliasServiceProvider.overrideWithValue(shellAliasSource),
               gitAliasServiceProvider.overrideWithValue(gitAliasSource),
             ],
-            child: const MaterialApp(
-              home: AliasListScreen(),
-            ),
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
         await tester.pumpAndSettle();

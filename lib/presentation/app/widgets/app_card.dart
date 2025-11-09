@@ -1,4 +1,4 @@
-import 'package:alias_manager/presentation/app_theme.dart';
+import 'package:alias_manager/presentation/app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class AppCard extends StatelessWidget {
