@@ -10,12 +10,12 @@ class AppButton extends StatelessWidget {
 
   const AppButton.icon({
     Key? key,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
     required IconData icon,
     required Widget child,
   }) : this._(key: key, onPressed: onPressed, icon: icon, child: child);
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final Widget child;
   final IconData? icon;
 

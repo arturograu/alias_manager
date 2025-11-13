@@ -7,11 +7,13 @@ class AppTextField extends StatelessWidget {
     required this.controller,
     required this.labelText,
     required this.hintText,
+    this.enabled = true,
   });
 
   final TextEditingController controller;
   final String labelText;
   final String hintText;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +21,7 @@ class AppTextField extends StatelessWidget {
 
     return TextField(
       controller: controller,
+      enabled: enabled,
       textInputAction: TextInputAction.done,
       decoration: InputDecoration(
         label: Text(labelText),

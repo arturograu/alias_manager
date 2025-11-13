@@ -1,5 +1,5 @@
-import 'package:alias_manager/data/alias_service/alias_service.dart';
-import 'package:alias_manager/presentation/add_alias/view/alias_form.dart';
+import 'package:alias_manager/domain/alias_repository/models/alias.dart';
+import 'package:alias_manager/presentation/add_alias/view/add_alias_form.dart';
 import 'package:alias_manager/presentation/app/theme/app_theme.dart';
 import 'package:alias_manager/presentation/app/widgets/widgets.dart';
 import 'package:alias_manager/presentation/home/state/home_notifier.dart';
@@ -12,38 +12,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AliasListPage extends ConsumerWidget {
   AliasListPage({super.key});
 
-  final _nameController = TextEditingController();
-  final _commandController = TextEditingController();
-
-  Future<void> _addAlias(WidgetRef ref) async {
-    final name = _nameController.text.trim();
-    final command = _commandController.text.trim();
-
-    if (name.isEmpty || command.isEmpty) return;
-
-    final alias = Alias(name: name, command: command);
-    ref.read(aliasListNotifierProvider.notifier).addAlias(alias);
-    _nameController.clear();
-    _commandController.clear();
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<AsyncValue<void>>(
-      aliasListNotifierProvider,
-      (_, state) => state.whenOrNull(
-        error: (error, stackTrace) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(error.toString())));
-        },
-      ),
-    );
+    ref.listen<AsyncValue<AliasListState>>(homeNotifierProvider, (prev, next) {
+      final hasErrorAfterLoading =
+          next.hasError && (prev == null || prev.isLoading);
+      if (hasErrorAfterLoading) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error.toString())));
+      }
+    });
 
-    final state = ref.watch(aliasListNotifierProvider);
-    final selectedType = switch (state) {
-      AsyncValue(:final value) => value?.selectedType ?? ShellAliasType(),
-    };
+    final state = ref.watch(homeNotifierProvider);
+    final selectedType = state.selectedType;
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
@@ -53,49 +35,13 @@ class AliasListPage extends ConsumerWidget {
             MainBar(
               child: AliasTypeSelector(
                 selectedType: selectedType,
-                onChanged: (type) => ref
-                    .read(aliasListNotifierProvider.notifier)
-                    .changeType(type),
+                onChanged: (type) =>
+                    ref.read(homeNotifierProvider.notifier).changeType(type),
               ),
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: AppLayoutWrapper(
-                child: AppCard(
-                  child: Column(
-                    children: [
-                      AppInnerCard(
-                        child: AliasForm(
-                          nameHint: selectedType.nameHint,
-                          commandHint: selectedType.commandHint,
-                          nameController: _nameController,
-                          commandController: _commandController,
-                          onAddAlias: () => _addAlias(ref),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Expanded(
-                        child: AppInnerCard(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: state.isLoading
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : AliasList(
-                                    aliases: switch (state) {
-                                      AsyncValue(:final value) =>
-                                        value?.aliases ?? [],
-                                    },
-                                    selectedType: selectedType,
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              child: AppLayoutWrapper(child: AppCard(child: _Body())),
             ),
           ],
         ),
@@ -104,8 +50,42 @@ class AliasListPage extends ConsumerWidget {
   }
 }
 
-extension on AliasType {
-  String get nameHint => this is ShellAliasType ? 'll' : 'lg';
-  String get commandHint =>
-      this is ShellAliasType ? 'ls -alF' : 'log --oneline';
+class _Body extends ConsumerWidget {
+  const _Body();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(homeNotifierProvider);
+    final selectedType = state.selectedType;
+    return Column(
+      children: [
+        AppInnerCard(child: AddAliasForm(selectedType: selectedType)),
+        const SizedBox(height: 18),
+        Expanded(
+          child: AppInnerCard(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: state.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : AliasList(
+                      aliases: switch (state) {
+                        AsyncValue(:final value) =>
+                          selectedType.isShell
+                              ? value?.shellAliases ?? []
+                              : value?.gitAliases ?? [],
+                      },
+                      selectedType: selectedType,
+                    ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+extension on AsyncValue<AliasListState> {
+  AliasType get selectedType => switch (this) {
+    AsyncValue(:final value) => value?.selectedType ?? AliasType.shell,
+  };
 }

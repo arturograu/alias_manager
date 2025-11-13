@@ -1,4 +1,4 @@
-import 'package:alias_manager/data/alias_service/alias_service.dart';
+import 'package:alias_manager/domain/alias_repository/models/alias.dart';
 import 'package:alias_manager/presentation/home/state/home_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +18,7 @@ class AliasList extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     return aliases.isEmpty
         ? Text(
-            'No ${selectedType is ShellAliasType ? 'shell' : 'git'} aliases found',
+            'No ${selectedType.isShell ? 'shell' : 'git'} aliases found',
             style: Theme.of(context).textTheme.bodyMedium,
           )
         : ListView.separated(
@@ -30,9 +30,13 @@ class AliasList extends ConsumerWidget {
                 title: Text(alias.name),
                 subtitle: Text(alias.command),
                 trailing: IconButton(
-                  icon: Icon(Icons.delete, color: scheme.error),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: scheme.error,
+                  ),
+                  icon: Icon(Icons.delete),
                   onPressed: () => ref
-                      .read(aliasListNotifierProvider.notifier)
+                      .read(homeNotifierProvider.notifier)
                       .deleteAlias(alias.name),
                 ),
               );
