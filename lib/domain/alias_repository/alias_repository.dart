@@ -49,4 +49,8 @@ class AliasRepository {
         .toList();
     _aliasesSubject.add(aliases);
   }
+
+  void dispose() {
+    _aliasesSubject.close();
+  }
 }

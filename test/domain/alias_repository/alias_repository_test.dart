@@ -415,5 +415,32 @@ void main() {
         expect(aliases.length, 2);
       });
     });
+
+    group('dispose', () {
+      test('closes the aliases stream', () async {
+        when(() => mockGitAliasSource.getAliases()).thenAnswer((_) async => []);
+        when(
+          () => mockShellAliasSource.getAliases(),
+        ).thenAnswer((_) async => []);
+
+        await repository.fetchAliases();
+
+        // Verify stream is working before dispose
+        final subscription = repository.aliases.listen((_) {});
+        await subscription.cancel();
+
+        // Dispose the repository
+        repository.dispose();
+
+        // The stream should emit its current value and then complete
+        await expectLater(
+          repository.aliases,
+          emitsInOrder([
+            [], // Current value (empty list after fetch)
+            emitsDone,
+          ]),
+        );
+      });
+    });
   });
 }

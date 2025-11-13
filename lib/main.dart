@@ -14,10 +14,12 @@ final gitAliasServiceProvider = Provider<GitAliasSource>((ref) {
 });
 
 final aliasRepositoryProvider = Provider<AliasRepository>((ref) {
-  return AliasRepository(
+  final repository = AliasRepository(
     gitAliasSource: ref.watch(gitAliasServiceProvider),
     shellAliasSource: ref.watch(shellAliasServiceProvider),
   );
+  ref.onDispose(repository.dispose);
+  return repository;
 });
 
 void main() {
