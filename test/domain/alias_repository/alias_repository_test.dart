@@ -263,6 +263,49 @@ void main() {
           throwsA(isA<Exception>()),
         );
       });
+
+      test(
+        'only deletes alias with matching name and type, not same name different type',
+        () async {
+          // Create aliases with the same name but different types
+          final gitAliases = [
+            alias_service.Alias(name: 'lg', command: 'git log'),
+          ];
+          final shellAliases = [
+            alias_service.Alias(name: 'lg', command: 'ls -la | grep'),
+          ];
+
+          when(
+            () => mockGitAliasSource.getAliases(),
+          ).thenAnswer((_) async => gitAliases);
+          when(
+            () => mockShellAliasSource.getAliases(),
+          ).thenAnswer((_) async => shellAliases);
+          when(
+            () => mockShellAliasSource.deleteAlias('lg'),
+          ).thenAnswer((_) async => {});
+
+          await repository.fetchAliases();
+
+          // Delete the shell alias with name 'lg'
+          await repository.deleteAlias('lg', AliasType.shell);
+
+          verify(() => mockShellAliasSource.deleteAlias('lg')).called(1);
+          verifyNever(() => mockGitAliasSource.deleteAlias(any()));
+
+          final aliases = await repository.aliases.first;
+          // Shell alias should be gone
+          expect(
+            aliases.where((a) => a.type == AliasType.shell && a.name == 'lg'),
+            isEmpty,
+          );
+          // Git alias should still exist
+          expect(
+            aliases.where((a) => a.type == AliasType.git && a.name == 'lg'),
+            hasLength(1),
+          );
+        },
+      );
     });
 
     group('aliases stream', () {

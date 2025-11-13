@@ -37,7 +37,7 @@ class AliasList extends ConsumerWidget {
                   icon: Icon(Icons.delete),
                   onPressed: () => ref
                       .read(homeNotifierProvider.notifier)
-                      .deleteAlias(alias.name),
+                      .deleteAlias(alias),
                 ),
               );
             },

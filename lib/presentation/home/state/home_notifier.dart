@@ -61,11 +61,11 @@ class HomeNotifier extends AsyncNotifier<AliasListState> {
     }
   }
 
-  Future<void> deleteAlias(String name) async {
+  Future<void> deleteAlias(Alias alias) async {
     try {
       await ref
           .read(aliasRepositoryProvider)
-          .deleteAlias(name, state.requireValue.selectedType);
+          .deleteAlias(alias.name, alias.type);
     } catch (e, s) {
       state = AsyncValue.error('Failed to delete alias', s);
     }

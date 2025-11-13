@@ -126,7 +126,14 @@ void main() {
 
       await container.read(homeNotifierProvider.future);
 
-      await container.read(homeNotifierProvider.notifier).deleteAlias('ll');
+      final aliasToDelete = Alias(
+        name: 'll',
+        command: 'ls -la',
+        type: AliasType.shell,
+      );
+      await container
+          .read(homeNotifierProvider.notifier)
+          .deleteAlias(aliasToDelete);
 
       verify(() => mockShellAliasSource.deleteAlias('ll')).called(1);
     });
@@ -200,9 +207,14 @@ void main() {
 
         // Trigger multiple updates
         for (var i = 0; i < 5; i++) {
+          final alias = Alias(
+            name: 'alias$i',
+            command: 'git command $i',
+            type: AliasType.git,
+          );
           await container
               .read(homeNotifierProvider.notifier)
-              .deleteAlias('alias$i');
+              .deleteAlias(alias);
         }
 
         // Container disposal will verify cleanup
@@ -252,13 +264,23 @@ void main() {
         await container.read(homeNotifierProvider.future);
 
         final notifier = container.read(homeNotifierProvider.notifier);
+        final alias1 = Alias(
+          name: 'test1',
+          command: 'test command 1',
+          type: AliasType.shell,
+        );
+        final alias2 = Alias(
+          name: 'test2',
+          command: 'test command 2',
+          type: AliasType.shell,
+        );
 
         // Trigger multiple concurrent operations
         final futures = [
           notifier.changeType(AliasType.git),
           notifier.changeType(AliasType.shell),
-          notifier.deleteAlias('test1'),
-          notifier.deleteAlias('test2'),
+          notifier.deleteAlias(alias1),
+          notifier.deleteAlias(alias2),
         ];
 
         await Future.wait(futures);

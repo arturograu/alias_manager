@@ -44,7 +44,9 @@ class AliasRepository {
       AliasType.shell => _shellAliasSource.deleteAlias(name),
       AliasType.git => _gitAliasSource.deleteAlias(name),
     };
-    final aliases = _aliasesSubject.value.where((a) => a.name != name).toList();
+    final aliases = _aliasesSubject.value
+        .where((a) => !(a.name == name && a.type == aliasType))
+        .toList();
     _aliasesSubject.add(aliases);
   }
 }
