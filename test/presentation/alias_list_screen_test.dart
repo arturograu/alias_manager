@@ -38,7 +38,7 @@ void main() {
               shellAliasServiceProvider.overrideWithValue(shellAliasSource),
               gitAliasServiceProvider.overrideWithValue(gitAliasSource),
             ],
-            child: const MaterialApp(home: AliasListPage()),
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
         await tester.pumpAndSettle();
@@ -104,13 +104,23 @@ void main() {
             child: MaterialApp(home: AliasListPage()),
           ),
         );
+        await tester.pumpAndSettle();
 
         await tester.enterText(find.byType(TextField).at(0), newAlias.name);
+        await tester.pump();
         await tester.enterText(find.byType(TextField).at(1), newAlias.command);
+        await tester.pump();
         await tester.tap(find.byKey(Key('add_alias_button')));
         await tester.pumpAndSettle();
 
-        verify(() => shellAliasSource.addAlias(newAlias)).called(1);
+        final captured = verify(
+          () => shellAliasSource.addAlias(captureAny()),
+        ).captured;
+
+        expect(captured.length, 1);
+        final capturedAlias = captured[0] as Alias;
+        expect(capturedAlias.name, newAlias.name);
+        expect(capturedAlias.command, newAlias.command);
       });
 
       testWidgets('deleteAlias when delete button is pressed', (tester) async {

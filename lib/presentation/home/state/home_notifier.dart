@@ -28,8 +28,9 @@ class AliasListState {
 
 class HomeNotifier extends AsyncNotifier<AliasListState> {
   void _onAliasesChanged(List<Alias> aliases) {
+    final currentState = state.hasValue ? state.value! : const AliasListState();
     state = AsyncValue.data(
-      state.requireValue.copyWith(
+      currentState.copyWith(
         gitAliases: aliases.where((a) => a.type.isGit).toList(),
         shellAliases: aliases.where((a) => a.type.isShell).toList(),
       ),
@@ -39,10 +40,12 @@ class HomeNotifier extends AsyncNotifier<AliasListState> {
   @override
   Future<AliasListState> build() async {
     try {
-      state = const AsyncValue.loading();
       ref.read(aliasRepositoryProvider).aliases.listen(_onAliasesChanged);
-      await ref.read(aliasRepositoryProvider).fetchAliases();
-      return const AliasListState(); // Placeholder return
+      final aliases = await ref.read(aliasRepositoryProvider).fetchAliases();
+      return AliasListState(
+        gitAliases: aliases.where((a) => a.type.isGit).toList(),
+        shellAliases: aliases.where((a) => a.type.isShell).toList(),
+      );
     } catch (e, s) {
       Error.throwWithStackTrace(Exception('Failed to load aliases'), s);
     }

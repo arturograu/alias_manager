@@ -5,10 +5,18 @@ import 'package:alias_manager/presentation/app/view/app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+final shellAliasServiceProvider = Provider<ShellAliasSource>((ref) {
+  return ShellAliasSource();
+});
+
+final gitAliasServiceProvider = Provider<GitAliasSource>((ref) {
+  return GitAliasSource();
+});
+
 final aliasRepositoryProvider = Provider<AliasRepository>((ref) {
   return AliasRepository(
-    gitAliasSource: GitAliasSource(),
-    shellAliasSource: ShellAliasSource(),
+    gitAliasSource: ref.watch(gitAliasServiceProvider),
+    shellAliasSource: ref.watch(shellAliasServiceProvider),
   );
 });
 
