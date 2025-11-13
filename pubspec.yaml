@@ -4,7 +4,7 @@ publish_to: "none"
 version: 0.5.0
 
 environment:
-  sdk: ^3.8.1
+  sdk: ">=3.10.0-0 <4.0.0"
 
 dependencies:
   system_command_runner: ^0.1.0
@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   flutter_svg: ^2.2.2
   google_fonts: ^6.3.2
+  flutter_riverpod: ^3.0.3
+  rxdart: ^0.28.0
 
 dev_dependencies:
   flutter_test:
@@ -21,6 +23,8 @@ dev_dependencies:
   mocktail: ^1.0.4
   flutter_gen_runner: ^5.12.0
   build_runner: ^2.10.2
+  riverpod_lint: ^3.0.3
+  custom_lint: ^0.8.1
 
 flutter:
   uses-material-design: true

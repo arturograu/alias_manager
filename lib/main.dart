@@ -1,38 +1,27 @@
 import 'package:alias_manager/data/alias_service/git_alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
-import 'package:alias_manager/presentation/alias_list_screen.dart';
-import 'package:alias_manager/presentation/app_theme.dart';
+import 'package:alias_manager/domain/alias_repository/alias_repository.dart';
+import 'package:alias_manager/presentation/app/view/app.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final shellAliasServiceProvider = Provider<ShellAliasSource>((ref) {
+  return ShellAliasSource();
+});
+
+final gitAliasServiceProvider = Provider<GitAliasSource>((ref) {
+  return GitAliasSource();
+});
+
+final aliasRepositoryProvider = Provider<AliasRepository>((ref) {
+  final repository = AliasRepository(
+    gitAliasSource: ref.watch(gitAliasServiceProvider),
+    shellAliasSource: ref.watch(shellAliasServiceProvider),
+  );
+  ref.onDispose(repository.dispose);
+  return repository;
+});
 
 void main() {
-  runApp(
-    MainApp(
-      gitAliasSource: GitAliasSource(),
-      shellAliasSource: ShellAliasSource(),
-    ),
-  );
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({
-    super.key,
-    required this.shellAliasSource,
-    required this.gitAliasSource,
-  });
-
-  final GitAliasSource gitAliasSource;
-  final ShellAliasSource shellAliasSource;
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Alias Manager',
-      theme: appTheme,
-      themeMode: ThemeMode.light,
-      home: AliasListScreen(
-        shellAliasSource: shellAliasSource,
-        gitAliasSource: gitAliasSource,
-      ),
-    );
-  }
+  runApp(ProviderScope(child: App()));
 }

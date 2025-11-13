@@ -1,8 +1,8 @@
 import 'package:alias_manager/gen/assets.gen.dart';
 import 'package:flutter/material.dart';
 
-class AppMainBar extends StatelessWidget {
-  const AppMainBar({super.key, required this.child});
+class MainBar extends StatelessWidget {
+  const MainBar({super.key, required this.child});
 
   final Widget child;
 

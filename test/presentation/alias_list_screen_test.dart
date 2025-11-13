@@ -1,8 +1,10 @@
 import 'package:alias_manager/data/alias_service/alias_service.dart';
 import 'package:alias_manager/data/alias_service/git_alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
-import 'package:alias_manager/presentation/alias_list_screen.dart';
+import 'package:alias_manager/main.dart';
+import 'package:alias_manager/presentation/home/view/home_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -31,16 +33,17 @@ void main() {
         when(() => shellAliasSource.getAliases()).thenAnswer((_) async => []);
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              shellAliasSource: shellAliasSource,
-              gitAliasSource: gitAliasSource,
-            ),
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.byType(AliasListScreen), findsOneWidget);
+        expect(find.byType(AliasListPage), findsOneWidget);
         expect(find.text('No shell aliases found'), findsOneWidget);
       });
 
@@ -53,16 +56,17 @@ void main() {
         );
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              gitAliasSource: gitAliasSource,
-              shellAliasSource: shellAliasSource,
-            ),
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.byType(AliasListScreen), findsOneWidget);
+        expect(find.byType(AliasListPage), findsOneWidget);
         expect(find.text('alias1'), findsOneWidget);
         expect(find.text('command1'), findsOneWidget);
         expect(find.text('alias2'), findsOneWidget);
@@ -73,11 +77,12 @@ void main() {
     group('calls', () {
       testWidgets('getAliases on init', (tester) async {
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              gitAliasSource: gitAliasSource,
-              shellAliasSource: shellAliasSource,
-            ),
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
 
@@ -91,20 +96,31 @@ void main() {
         ).thenAnswer((_) async {});
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              shellAliasSource: shellAliasSource,
-              gitAliasSource: gitAliasSource,
-            ),
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
+        await tester.pumpAndSettle();
 
         await tester.enterText(find.byType(TextField).at(0), newAlias.name);
+        await tester.pump();
         await tester.enterText(find.byType(TextField).at(1), newAlias.command);
+        await tester.pump();
         await tester.tap(find.byKey(Key('add_alias_button')));
         await tester.pumpAndSettle();
 
-        verify(() => shellAliasSource.addAlias(newAlias)).called(1);
+        final captured = verify(
+          () => shellAliasSource.addAlias(captureAny()),
+        ).captured;
+
+        expect(captured.length, 1);
+        final capturedAlias = captured[0] as Alias;
+        expect(capturedAlias.name, newAlias.name);
+        expect(capturedAlias.command, newAlias.command);
       });
 
       testWidgets('deleteAlias when delete button is pressed', (tester) async {
@@ -116,11 +132,12 @@ void main() {
         ).thenAnswer((_) async {});
 
         await tester.pumpWidget(
-          MaterialApp(
-            home: AliasListScreen(
-              gitAliasSource: gitAliasSource,
-              shellAliasSource: shellAliasSource,
-            ),
+          ProviderScope(
+            overrides: [
+              shellAliasServiceProvider.overrideWithValue(shellAliasSource),
+              gitAliasServiceProvider.overrideWithValue(gitAliasSource),
+            ],
+            child: MaterialApp(home: AliasListPage()),
           ),
         );
         await tester.pumpAndSettle();

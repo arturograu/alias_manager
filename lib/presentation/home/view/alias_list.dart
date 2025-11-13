@@ -1,21 +1,20 @@
-import 'package:alias_manager/data/alias_service/alias_service.dart';
-import 'package:alias_manager/presentation/alias_type_selector.dart';
+import 'package:alias_manager/domain/alias_repository/models/alias.dart';
+import 'package:alias_manager/presentation/home/state/home_notifier.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AliasList extends StatelessWidget {
+class AliasList extends ConsumerWidget {
   const AliasList({
     super.key,
     required this.aliases,
     required this.selectedType,
-    required this.onDeleteAlias,
   });
 
   final List<Alias> aliases;
   final AliasType selectedType;
-  final ValueChanged<String> onDeleteAlias;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return aliases.isEmpty
         ? Text(
@@ -31,11 +30,14 @@ class AliasList extends StatelessWidget {
                 title: Text(alias.name),
                 subtitle: Text(alias.command),
                 trailing: IconButton(
-                  icon: Icon(Icons.delete, color: scheme.error),
-                  // TODO: Add provider so we can call the `GitAliasSource` methods
-                  // directly without needing to pass it around.
-                  // This will also allow us to split the UI in a cleaner way.
-                  onPressed: () => onDeleteAlias(alias.name),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: scheme.error,
+                  ),
+                  icon: Icon(Icons.delete),
+                  onPressed: () => ref
+                      .read(homeNotifierProvider.notifier)
+                      .deleteAlias(alias),
                 ),
               );
             },

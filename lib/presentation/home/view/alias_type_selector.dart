@@ -1,17 +1,10 @@
+import 'package:alias_manager/domain/alias_repository/models/alias.dart';
 import 'package:alias_manager/gen/assets.gen.dart';
-import 'package:alias_manager/presentation/widgets/widgets.dart';
+import 'package:alias_manager/presentation/app/widgets/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-enum AliasType {
-  shell,
-  git;
-
-  bool get isShell => this == AliasType.shell;
-  bool get isGit => this == AliasType.git;
-}
-
-class AliasTypeSelector extends StatefulWidget {
+class AliasTypeSelector extends StatelessWidget {
   const AliasTypeSelector({
     super.key,
     required this.selectedType,
@@ -20,26 +13,6 @@ class AliasTypeSelector extends StatefulWidget {
 
   final AliasType selectedType;
   final ValueChanged<AliasType> onChanged;
-
-  @override
-  State<AliasTypeSelector> createState() => _CustomAliasTypeSelectorState();
-}
-
-class _CustomAliasTypeSelectorState extends State<AliasTypeSelector> {
-  late AliasType _selectedType;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedType = widget.selectedType;
-  }
-
-  void _onTypeSelected(AliasType type) {
-    setState(() {
-      _selectedType = type;
-    });
-    widget.onChanged(type);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +25,7 @@ class _CustomAliasTypeSelectorState extends State<AliasTypeSelector> {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             bottom: 0,
-            left: _selectedType.isShell ? 0 : 38,
+            left: selectedType.isShell ? 0 : 38,
             child: Container(
               width: 34,
               height: 34,
@@ -65,12 +38,12 @@ class _CustomAliasTypeSelectorState extends State<AliasTypeSelector> {
           Row(
             children: [
               _SegmentButton(
-                onPressed: () => _onTypeSelected(AliasType.shell),
+                onPressed: () => onChanged(AliasType.shell),
                 icon: Assets.icons.terminal,
               ),
               const SizedBox(width: 4),
               _SegmentButton(
-                onPressed: () => _onTypeSelected(AliasType.git),
+                onPressed: () => onChanged(AliasType.git),
                 icon: Assets.icons.github,
               ),
             ],
