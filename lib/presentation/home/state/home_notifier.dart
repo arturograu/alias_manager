@@ -40,8 +40,10 @@ class HomeNotifier extends AsyncNotifier<AliasListState> {
   @override
   Future<AliasListState> build() async {
     try {
-      ref.read(aliasRepositoryProvider).aliases.listen(_onAliasesChanged);
-      final aliases = await ref.read(aliasRepositoryProvider).fetchAliases();
+      final repo = ref.read(aliasRepositoryProvider);
+      final subscription = repo.aliases.listen(_onAliasesChanged);
+      ref.onDispose(subscription.cancel);
+      final aliases = await repo.fetchAliases();
       return AliasListState(
         gitAliases: aliases.where((a) => a.type.isGit).toList(),
         shellAliases: aliases.where((a) => a.type.isShell).toList(),
