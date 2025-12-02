@@ -15,6 +15,7 @@ dependencies:
   google_fonts: ^6.3.2
   flutter_riverpod: ^3.0.3
   rxdart: ^0.28.0
+  formz: ^0.8.0
 
 dev_dependencies:
   flutter_test:
