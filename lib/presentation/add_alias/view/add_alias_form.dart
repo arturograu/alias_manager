@@ -1,5 +1,4 @@
 import 'package:alias_manager/domain/alias_repository/models/alias.dart';
-import 'package:alias_manager/presentation/add_alias/models/models.dart';
 import 'package:alias_manager/presentation/add_alias/state/add_alias_notifier.dart';
 import 'package:alias_manager/presentation/add_alias/state/add_alias_state.dart';
 import 'package:alias_manager/presentation/app/widgets/app_button.dart';
@@ -37,12 +36,11 @@ class _AddAliasFormState extends ConsumerState<AddAliasForm> {
 
   @override
   Widget build(BuildContext context) {
-    final notifier = ref.read(addAliasNotifierProvider.notifier);
-    final formState = ref.watch(addAliasNotifierProvider);
+    final provider = addAliasNotifierProvider(widget.selectedType);
+    final notifier = ref.read(provider.notifier);
+    final formState = ref.watch(provider);
 
-    notifier.initialize(widget.selectedType);
-
-    ref.listen<AddAliasState>(addAliasNotifierProvider, (previous, next) {
+    ref.listen<AddAliasState>(provider, (previous, next) {
       if (next.status.isSuccess) {
         _nameController.clear();
         _commandController.clear();

@@ -6,7 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:formz/formz.dart';
 
 class AddAliasNotifier extends Notifier<AddAliasState> {
-  AliasType _aliasType = AliasType.shell;
+  late AliasType _aliasType;
+
+  void _initialize(AliasType aliasType) {
+    _aliasType = aliasType;
+  }
 
   @override
   AddAliasState build() {
@@ -14,16 +18,6 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
       aliasName: AliasName.pure(aliasType: _aliasType),
       aliasCommand: const AliasCommand.pure(),
     );
-  }
-
-  void initialize(AliasType aliasType) {
-    if (_aliasType != aliasType) {
-      _aliasType = aliasType;
-      state = AddAliasState(
-        aliasName: AliasName.pure(aliasType: aliasType),
-        aliasCommand: const AliasCommand.pure(),
-      );
-    }
   }
 
   void onNameChanged(String value) {
@@ -80,5 +74,9 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
   }
 }
 
-final addAliasNotifierProvider =
-    NotifierProvider<AddAliasNotifier, AddAliasState>(AddAliasNotifier.new);
+final addAliasNotifierProvider = NotifierProvider.autoDispose
+    .family<AddAliasNotifier, AddAliasState, AliasType>((aliasType) {
+      final notifier = AddAliasNotifier();
+      notifier._initialize(aliasType);
+      return notifier;
+    });
