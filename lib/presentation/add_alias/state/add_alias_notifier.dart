@@ -26,7 +26,6 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
     }
   }
 
-  /// Update the alias name field
   void onNameChanged(String value) {
     final aliasName = AliasName.dirty(value: value, aliasType: _aliasType);
     state = state.copyWith(
@@ -35,7 +34,6 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
     );
   }
 
-  /// Update the alias command field
   void onCommandChanged(String value) {
     final aliasCommand = AliasCommand.dirty(value: value);
     state = state.copyWith(
@@ -44,9 +42,7 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
     );
   }
 
-  /// Submit the form and add the alias
   Future<void> submitForm() async {
-    // Mark all fields as dirty to show validation errors
     state = state.copyWith(
       aliasName: AliasName.dirty(
         value: state.aliasName.value,
@@ -55,7 +51,6 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
       aliasCommand: AliasCommand.dirty(value: state.aliasCommand.value),
     );
 
-    // Only proceed if form is valid
     if (!state.isValid) return;
 
     state = state.copyWith(status: FormzSubmissionStatus.inProgress);
@@ -71,7 +66,6 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
       await repository.addAlias(alias, _aliasType);
 
       state = state.copyWith(status: FormzSubmissionStatus.success);
-      // Clear form after successful submission
       state = state.clear(aliasType: _aliasType);
     } catch (e) {
       state = state.copyWith(
@@ -81,12 +75,10 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
     }
   }
 
-  /// Clear the form
   void clearForm() {
     state = state.clear(aliasType: _aliasType);
   }
 }
 
-/// Provider for the AddAliasNotifier
 final addAliasNotifierProvider =
     NotifierProvider<AddAliasNotifier, AddAliasState>(AddAliasNotifier.new);
