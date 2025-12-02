@@ -25,67 +25,62 @@ class AliasListPage extends ConsumerWidget {
     });
 
     final state = ref.watch(homeNotifierProvider);
-    final selectedType = state.selectedType;
+
     return Scaffold(
       body: Container(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
         decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
-        child: Column(
-          children: [
-            MainBar(
-              child: AliasTypeSelector(
-                selectedType: selectedType,
-                onChanged: (type) =>
-                    ref.read(homeNotifierProvider.notifier).changeType(type),
+        child: switch (state) {
+          AsyncData(:final value) => Column(
+            children: [
+              MainBar(
+                child: AliasTypeSelector(
+                  selectedType: value.selectedType,
+                  onChanged: (type) =>
+                      ref.read(homeNotifierProvider.notifier).changeType(type),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: AppLayoutWrapper(child: AppCard(child: _Body())),
-            ),
-          ],
-        ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: AppLayoutWrapper(
+                  child: AppCard(
+                    child: _Body(
+                      selectedType: value.selectedType,
+                      aliases: value.selectedType.isShell
+                          ? value.shellAliases
+                          : value.gitAliases,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          AsyncLoading() => const Center(child: CircularProgressIndicator()),
+          AsyncError(:final error) => Center(child: Text('Error: $error')),
+        },
       ),
     );
   }
 }
 
 class _Body extends ConsumerWidget {
-  const _Body();
+  const _Body({required this.selectedType, required this.aliases});
+
+  final AliasType selectedType;
+  final List<Alias> aliases;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(homeNotifierProvider);
-    final selectedType = state.selectedType;
     return Column(
       children: [
         AppInnerCard(child: AddAliasForm(selectedType: selectedType)),
         const SizedBox(height: 18),
         Expanded(
           child: AppInnerCard(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: state.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : AliasList(
-                      aliases: switch (state) {
-                        AsyncValue(:final value) =>
-                          selectedType.isShell
-                              ? value?.shellAliases ?? []
-                              : value?.gitAliases ?? [],
-                      },
-                      selectedType: selectedType,
-                    ),
-            ),
+            child: AliasList(aliases: aliases, selectedType: selectedType),
           ),
         ),
       ],
     );
   }
-}
-
-extension on AsyncValue<AliasListState> {
-  AliasType get selectedType => switch (this) {
-    AsyncValue(:final value) => value?.selectedType ?? AliasType.shell,
-  };
 }
