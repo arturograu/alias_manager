@@ -1,9 +1,11 @@
 import 'package:alias_manager/domain/alias_repository/models/alias.dart';
 import 'package:alias_manager/presentation/add_alias/state/add_alias_notifier.dart';
+import 'package:alias_manager/presentation/add_alias/state/add_alias_state.dart';
 import 'package:alias_manager/presentation/app/widgets/app_button.dart';
 import 'package:alias_manager/presentation/app/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:formz/formz.dart';
 
 class AddAliasForm extends ConsumerStatefulWidget {
   const AddAliasForm({super.key, required this.selectedType});
@@ -26,51 +28,50 @@ class _AddAliasFormState extends ConsumerState<AddAliasForm> {
   }
 
   @override
+  void didUpdateWidget(AddAliasForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedType != widget.selectedType) {
+      final notifier = ref.read(
+        addAliasNotifierProvider(widget.selectedType).notifier,
+      );
+      if (_nameController.text.isNotEmpty) {
+        notifier.onNameChanged(_nameController.text);
+      }
+      if (_commandController.text.isNotEmpty) {
+        notifier.onCommandChanged(_commandController.text);
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _commandController.dispose();
     super.dispose();
   }
 
-  void _addAlias() {
-    final name = _nameController.text.trim();
-    final command = _commandController.text.trim();
-
-    if (name.isEmpty || command.isEmpty) return;
-
-    final alias = Alias(
-      name: name,
-      command: command,
-      type: widget.selectedType,
-    );
-    ref
-        .read(addAliasNotifierProvider.notifier)
-        .addAlias(alias, widget.selectedType);
-  }
-
-  void _onSuccess() {
-    _nameController.clear();
-    _commandController.clear();
-  }
-
   @override
   Widget build(BuildContext context) {
-    ref.listen<AsyncValue<void>>(addAliasNotifierProvider, (previous, next) {
-      final isSuccess = previous?.isLoading == true && next.hasValue;
-      if (isSuccess) {
-        _onSuccess();
+    final provider = addAliasNotifierProvider(widget.selectedType);
+    final notifier = ref.read(provider.notifier);
+    final formState = ref.watch(provider);
+
+    ref.listen<AddAliasState>(provider, (previous, next) {
+      if (next.status.isSuccess) {
+        _nameController.clear();
+        _commandController.clear();
+        notifier.clearForm();
       }
 
-      final isError = previous?.isLoading == true && next.hasError;
-      if (isError) {
+      final errorMessage = next.errorMessage;
+      if (next.status.isFailure && errorMessage != null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(next.error.toString())));
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     });
 
-    final state = ref.watch(addAliasNotifierProvider);
-    final isLoading = state.isLoading;
+    final isLoading = formState.isSubmitting;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,6 +82,8 @@ class _AddAliasFormState extends ConsumerState<AddAliasForm> {
             labelText: 'Alias name',
             hintText: widget.selectedType.nameHint,
             enabled: !isLoading,
+            onChanged: notifier.onNameChanged,
+            errorText: formState.aliasName.displayError?.message,
           ),
         ),
         const SizedBox(width: 8),
@@ -91,12 +94,14 @@ class _AddAliasFormState extends ConsumerState<AddAliasForm> {
             labelText: 'Command',
             hintText: widget.selectedType.commandHint,
             enabled: !isLoading,
+            onChanged: notifier.onCommandChanged,
+            errorText: formState.aliasCommand.displayError?.message,
           ),
         ),
         const SizedBox(width: 8),
         AppButton.icon(
           key: Key('add_alias_button'),
-          onPressed: isLoading ? null : _addAlias,
+          onPressed: isLoading ? null : notifier.submitForm,
           icon: Icons.add,
           child: isLoading
               ? const SizedBox(

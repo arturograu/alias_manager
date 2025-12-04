@@ -8,12 +8,16 @@ class AppTextField extends StatelessWidget {
     required this.labelText,
     required this.hintText,
     this.enabled = true,
+    this.onChanged,
+    this.errorText,
   });
 
   final TextEditingController controller;
   final String labelText;
   final String hintText;
   final bool enabled;
+  final ValueChanged<String>? onChanged;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +26,7 @@ class AppTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       enabled: enabled,
+      onChanged: onChanged,
       textInputAction: TextInputAction.done,
       decoration: InputDecoration(
         label: Text(labelText),
@@ -29,6 +34,8 @@ class AppTextField extends StatelessWidget {
         floatingLabelStyle: const TextStyle(color: AppColors.onSurface),
         hintText: hintText,
         hintStyle: TextStyle(color: scheme.onSurface.withAlpha(60)),
+        errorText: errorText,
+        errorMaxLines: 3,
         isDense: true,
         contentPadding: EdgeInsets.symmetric(
           horizontal: 24,
@@ -47,6 +54,14 @@ class AppTextField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide(color: scheme.outline),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(28),
+          borderSide: BorderSide(color: scheme.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(28),
+          borderSide: BorderSide(color: scheme.error, width: 2),
         ),
       ),
     );

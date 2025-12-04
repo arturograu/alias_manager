@@ -17,9 +17,14 @@ class AliasList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     return aliases.isEmpty
-        ? Text(
-            'No ${selectedType.isShell ? 'shell' : 'git'} aliases found',
-            style: Theme.of(context).textTheme.bodyMedium,
+        ? SizedBox(
+            width: double.infinity,
+            child: Center(
+              child: Text(
+                'No ${selectedType.isShell ? 'shell' : 'git'} aliases found',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
           )
         : ListView.separated(
             itemCount: aliases.length,
