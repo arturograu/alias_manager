@@ -78,6 +78,7 @@ class _AddAliasFormState extends ConsumerState<AddAliasForm> {
             hintText: widget.selectedType.commandHint,
             enabled: !isLoading,
             onChanged: notifier.onCommandChanged,
+            errorText: formState.aliasCommand.displayError?.message,
           ),
         ),
         const SizedBox(width: 8),
