@@ -44,6 +44,7 @@ class _AddAliasFormState extends ConsumerState<AddAliasForm> {
       if (next.status.isSuccess) {
         _nameController.clear();
         _commandController.clear();
+        notifier.clearForm();
       }
 
       final errorMessage = next.errorMessage;

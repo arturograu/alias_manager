@@ -60,7 +60,6 @@ class AddAliasNotifier extends Notifier<AddAliasState> {
       await repository.addAlias(alias, _aliasType);
 
       state = state.copyWith(status: FormzSubmissionStatus.success);
-      state = state.clear(aliasType: _aliasType);
     } catch (e) {
       state = state.copyWith(
         status: FormzSubmissionStatus.failure,
