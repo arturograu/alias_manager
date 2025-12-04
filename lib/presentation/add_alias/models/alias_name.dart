@@ -33,7 +33,7 @@ class AliasName extends FormzInput<String, AliasNameValidationError>
 
   @override
   AliasNameValidationError? validator(String value) {
-    if (value.isEmpty) {
+    if (value.trim().isEmpty) {
       return AliasNameValidationError.empty;
     }
 

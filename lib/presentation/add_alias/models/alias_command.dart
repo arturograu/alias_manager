@@ -17,7 +17,7 @@ class AliasCommand extends FormzInput<String, AliasCommandValidationError> {
 
   @override
   AliasCommandValidationError? validator(String value) {
-    if (value.isEmpty) {
+    if (value.trim().isEmpty) {
       return AliasCommandValidationError.empty;
     }
     return null;
