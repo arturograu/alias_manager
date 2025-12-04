@@ -28,6 +28,22 @@ class _AddAliasFormState extends ConsumerState<AddAliasForm> {
   }
 
   @override
+  void didUpdateWidget(AddAliasForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedType != widget.selectedType) {
+      final notifier = ref.read(
+        addAliasNotifierProvider(widget.selectedType).notifier,
+      );
+      if (_nameController.text.isNotEmpty) {
+        notifier.onNameChanged(_nameController.text);
+      }
+      if (_commandController.text.isNotEmpty) {
+        notifier.onCommandChanged(_commandController.text);
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _commandController.dispose();
