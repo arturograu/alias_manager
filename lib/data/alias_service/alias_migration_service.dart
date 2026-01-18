@@ -116,7 +116,6 @@ class AliasMigrationService {
     return aliasesToAdd;
   }
 
-  /// Parses aliases from file content
   List<Alias> _parseAliasesFromContent(String content) {
     final lines = content.split('\n');
     final aliases = <Alias>[];
@@ -143,7 +142,6 @@ class AliasMigrationService {
     return aliases;
   }
 
-  /// Removes alias definitions from the RC file
   Future<void> _removeAliasesFromRcFile(List<Alias> aliases) async {
     final rcFile = File(_rcFile);
     if (!await rcFile.exists()) {
@@ -172,7 +170,6 @@ class AliasMigrationService {
     await rcFile.writeAsString(filteredLines.join('\n'));
   }
 
-  /// Ensures the RC file sources the .bash_aliases file
   Future<void> _ensureRcFileSourcesAliasFile() async {
     final rcFile = File(_rcFile);
     if (!await rcFile.exists()) {
@@ -189,6 +186,6 @@ class AliasMigrationService {
     // Add the sourcing block
     final sourceBlock =
         '\nif [ -f ~/.bash_aliases ]; then\n    . ~/.bash_aliases\nfi\n';
-    await rcFile.writeAsString('$content$sourceBlock', mode: FileMode.append);
+    await rcFile.writeAsString('$content$sourceBlock');
   }
 }
