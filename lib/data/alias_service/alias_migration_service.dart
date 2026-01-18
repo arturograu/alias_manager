@@ -113,10 +113,14 @@ class AliasMigrationService {
     }
 
     final content = await rcFile.readAsString();
-    final aliasNames = aliases.map((a) => a.name).toSet();
+    final aliasKeysToRemove = aliases
+        .map((alias) => _aliasKey(alias.name, alias.command))
+        .toSet();
     final parsedAliases = _AliasParser().parseWithRanges(content);
     final rangesToRemove = parsedAliases
-        .where((parsed) => aliasNames.contains(parsed.alias.name))
+        .where((parsed) => aliasKeysToRemove.contains(
+              _aliasKey(parsed.alias.name, parsed.alias.command),
+            ))
         .toList();
 
     if (rangesToRemove.isEmpty) {
@@ -136,6 +140,10 @@ class AliasMigrationService {
     }
 
     await rcFile.writeAsString(buffer.toString());
+  }
+
+  String _aliasKey(String name, String command) {
+    return '$name\0$command';
   }
 
   Future<void> _ensureRcFileSourcesAliasFile() async {
