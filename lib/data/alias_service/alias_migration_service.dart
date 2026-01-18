@@ -52,8 +52,11 @@ class AliasMigrationService {
     final aliases = await _extractAliasesFromRcFile();
 
     if (aliases.isEmpty) {
+      await _ensureRcFileSourcesAliasFile();
       return [];
     }
+
+    await _ensureRcFileSourcesAliasFile();
 
     // Ensure .bash_aliases file exists (create if it doesn't)
     final aliasFile = File(_aliasFile);
