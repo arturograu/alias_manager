@@ -32,6 +32,8 @@ class _AliasListPageState extends ConsumerState<AliasListPage> {
   }
 
   Future<void> _checkMigration() async {
+    if (!mounted) return;
+
     final migrationNotifier = ref.read(migrationNotifierProvider.notifier);
     final migrationState = ref.read(migrationNotifierProvider);
 
