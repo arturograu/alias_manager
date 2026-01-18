@@ -42,35 +42,8 @@ class AliasMigrationService {
     }
 
     final content = await rcFile.readAsString();
-    final lines = content.split('\n');
-
-    final aliases = <Alias>[];
-    for (final line in lines) {
-      final trimmed = line.trim();
-      // Look for lines that start with 'alias ' and contain '='
-      if (trimmed.startsWith('alias ') && trimmed.contains('=')) {
-        // Remove 'alias ' prefix
-        var aliasLine = trimmed.substring(6).trim();
-
-        // Find the first '='
-        final eqIndex = aliasLine.indexOf('=');
-        if (eqIndex == -1) continue;
-
-        final name = aliasLine.substring(0, eqIndex).trim();
-        var command = aliasLine.substring(eqIndex + 1).trim();
-
-        // Remove surrounding quotes if they match
-        if (command.length > 1 &&
-            ((command.startsWith('"') && command.endsWith('"')) ||
-                (command.startsWith("'") && command.endsWith("'")))) {
-          command = command.substring(1, command.length - 1);
-        }
-
-        aliases.add(Alias(name: name, command: command));
-      }
-    }
-
-    return aliases;
+    final parsedAliases = _AliasParser().parseWithRanges(content);
+    return parsedAliases.map((parsed) => parsed.alias).toList();
   }
 
   /// Migrates aliases from RC file to .bash_aliases file
@@ -129,30 +102,8 @@ class AliasMigrationService {
   }
 
   List<Alias> _parseAliasesFromContent(String content) {
-    final lines = content.split('\n');
-    final aliases = <Alias>[];
-
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.startsWith('alias ') && trimmed.contains('=')) {
-        var aliasLine = trimmed.substring(6).trim();
-        final eqIndex = aliasLine.indexOf('=');
-        if (eqIndex == -1) continue;
-
-        final name = aliasLine.substring(0, eqIndex).trim();
-        var command = aliasLine.substring(eqIndex + 1).trim();
-
-        if (command.length > 1 &&
-            ((command.startsWith('"') && command.endsWith('"')) ||
-                (command.startsWith("'") && command.endsWith("'")))) {
-          command = command.substring(1, command.length - 1);
-        }
-
-        aliases.add(Alias(name: name, command: command));
-      }
-    }
-
-    return aliases;
+    final parsedAliases = _AliasParser().parseWithRanges(content);
+    return parsedAliases.map((parsed) => parsed.alias).toList();
   }
 
   Future<void> _removeAliasesFromRcFile(List<Alias> aliases) async {
@@ -162,25 +113,29 @@ class AliasMigrationService {
     }
 
     final content = await rcFile.readAsString();
-    final lines = content.split('\n');
     final aliasNames = aliases.map((a) => a.name).toSet();
+    final parsedAliases = _AliasParser().parseWithRanges(content);
+    final rangesToRemove = parsedAliases
+        .where((parsed) => aliasNames.contains(parsed.alias.name))
+        .toList();
 
-    // Filter out lines that define these aliases
-    final filteredLines = lines.where((line) {
-      final trimmed = line.trim();
-      if (!trimmed.startsWith('alias ')) return true;
+    if (rangesToRemove.isEmpty) {
+      return;
+    }
 
-      for (final aliasName in aliasNames) {
-        // Check if this line defines the alias
-        final pattern = RegExp('^alias $aliasName=');
-        if (pattern.hasMatch(trimmed)) {
-          return false;
-        }
+    final buffer = StringBuffer();
+    var cursor = 0;
+    for (final parsed in rangesToRemove) {
+      if (parsed.rangeStart > cursor) {
+        buffer.write(content.substring(cursor, parsed.rangeStart));
       }
-      return true;
-    }).toList();
+      cursor = parsed.rangeEnd;
+    }
+    if (cursor < content.length) {
+      buffer.write(content.substring(cursor));
+    }
 
-    await rcFile.writeAsString(filteredLines.join('\n'));
+    await rcFile.writeAsString(buffer.toString());
   }
 
   Future<void> _ensureRcFileSourcesAliasFile() async {
@@ -203,6 +158,210 @@ class AliasMigrationService {
   }
 
   String _escapeCommandForAliasFile(String command) {
-    return command.replaceAll('"', r'\"');
+    return command
+        .replaceAll(r'\', r'\\')
+        .replaceAll(r'$', r'\$')
+        .replaceAll('"', r'\"');
   }
+}
+
+class _ParsedAlias {
+  _ParsedAlias({
+    required this.alias,
+    required this.rangeStart,
+    required this.rangeEnd,
+  });
+
+  final Alias alias;
+  final int rangeStart;
+  final int rangeEnd;
+}
+
+/// Minimal parser for `alias name='command'` that can span multiple lines.
+///
+/// Intent (Clean Code):
+/// - Small, named methods with one reason to change.
+/// - The caller sees clear steps, not parsing mechanics.
+/// - The parsing logic explains *why* it exists, not just *how*.
+class _AliasParser {
+  List<_ParsedAlias> parseWithRanges(String content) {
+    final parsed = <_ParsedAlias>[];
+    final length = content.length;
+    var lineStart = 0;
+
+    while (lineStart < length) {
+      final lineEnd = content.indexOf('\n', lineStart);
+      final effectiveLineEnd = lineEnd == -1 ? length : lineEnd;
+      final aliasStart = _skipWhitespace(content, lineStart, effectiveLineEnd);
+
+      if (aliasStart < effectiveLineEnd &&
+          content.startsWith('alias ', aliasStart)) {
+        final parsedAlias = _parseAliasDefinition(
+          content,
+          aliasStart,
+          lineStart,
+        );
+        if (parsedAlias != null) {
+          parsed.add(parsedAlias);
+          lineStart = parsedAlias.rangeEnd;
+          continue;
+        }
+      }
+
+      lineStart = effectiveLineEnd + 1;
+    }
+
+    return parsed;
+  }
+
+  int _skipWhitespace(String content, int start, int end) {
+    var index = start;
+    while (index < end && content.codeUnitAt(index) <= 32) {
+      index++;
+    }
+    return index;
+  }
+
+  _ParsedAlias? _parseAliasDefinition(
+    String content,
+    int aliasStart,
+    int rangeStart,
+  ) {
+    final length = content.length;
+    var index = aliasStart + 'alias '.length;
+
+    index = _skipWhitespace(content, index, length);
+    if (index >= length) return null;
+
+    final nameStart = index;
+    while (index < length &&
+        content[index] != '=' &&
+        content.codeUnitAt(index) > 32) {
+      index++;
+    }
+
+    final name = content.substring(nameStart, index).trim();
+    if (name.isEmpty) return null;
+
+    index = _skipWhitespace(content, index, length);
+    if (index >= length || content[index] != '=') {
+      return null;
+    }
+
+    index++;
+    index = _skipWhitespace(content, index, length);
+    if (index >= length) {
+      return _ParsedAlias(
+        alias: Alias(name: name, command: ''),
+        rangeStart: rangeStart,
+        rangeEnd: length,
+      );
+    }
+
+    final quoteChar = content[index] == '"' || content[index] == "'"
+        ? content[index]
+        : null;
+    final command = _readCommand(content, index, quoteChar);
+
+    return _ParsedAlias(
+      alias: Alias(name: name, command: command.value.trim()),
+      rangeStart: rangeStart,
+      rangeEnd: _rangeEndAfterCommand(content, command.nextIndex),
+    );
+  }
+
+  _ReadResult _readCommand(String content, int start, String? quoteChar) {
+    // Parsing rules (minimal, but sufficient for migration):
+    // - Single quotes: literal, no escapes.
+    // - Double quotes: backslash escapes the next char; "\<newline>" keeps newline.
+    // - Unquoted: backslash-newline continues the command.
+    if (quoteChar == null) {
+      return _readUnquotedCommand(content, start);
+    }
+    return _readQuotedCommand(content, start + 1, quoteChar);
+  }
+
+  _ReadResult _readQuotedCommand(String content, int start, String quoteChar) {
+    final length = content.length;
+    final commandBuilder = StringBuffer();
+    var index = start;
+
+    while (index < length) {
+      final char = content[index];
+      if (char == quoteChar) {
+        index++;
+        break;
+      }
+      // Only double quotes allow escapes. Single quotes are literal.
+      if (quoteChar == '"' && char == r'\' && index + 1 < length) {
+        final escaped = _readEscapedInDoubleQuotes(content, index);
+        commandBuilder.write(escaped.value);
+        index = escaped.nextIndex;
+        continue;
+      }
+      commandBuilder.write(char);
+      index++;
+    }
+
+    return _ReadResult(commandBuilder.toString(), index);
+  }
+
+  _ReadResult _readUnquotedCommand(String content, int start) {
+    final length = content.length;
+    final commandBuilder = StringBuffer();
+    var index = start;
+
+    while (index < length) {
+      final char = content[index];
+      if (char == '\n') {
+        break;
+      }
+      if (_isLineContinuation(content, index)) {
+        commandBuilder.write('\n');
+        index += 2;
+        continue;
+      }
+      commandBuilder.write(char);
+      index++;
+    }
+
+    return _ReadResult(commandBuilder.toString(), index);
+  }
+
+  _ReadResult _readEscapedInDoubleQuotes(String content, int backslashIndex) {
+    // backslashIndex points at '\', so read the next character.
+    final nextIndex = backslashIndex + 1;
+    if (nextIndex >= content.length) {
+      return _ReadResult(r'\', backslashIndex + 1);
+    }
+
+    if (content[nextIndex] == '\n') {
+      return _ReadResult('\n', backslashIndex + 2);
+    }
+
+    return _ReadResult(content[nextIndex], backslashIndex + 2);
+  }
+
+  bool _isLineContinuation(String content, int index) {
+    return content[index] == r'\' &&
+        index + 1 < content.length &&
+        content[index + 1] == '\n';
+  }
+
+  int _rangeEndAfterCommand(String content, int index) {
+    var rangeEnd = content.indexOf('\n', index);
+    if (rangeEnd == -1) {
+      rangeEnd = content.length;
+    } else {
+      rangeEnd += 1;
+    }
+    return rangeEnd;
+  }
+}
+
+class _ReadResult {
+  _ReadResult(this.value, this.nextIndex);
+
+  final String value;
+  final int nextIndex;
 }

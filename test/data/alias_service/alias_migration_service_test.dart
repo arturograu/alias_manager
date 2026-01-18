@@ -87,6 +87,47 @@ void main() {
         expect(result[0].command, 'ls -la');
       });
 
+      test('handles multiline aliases in quotes', () async {
+        await rcFile.writeAsString(
+          "alias test='echo hello\nworld'\nexport PATH=/usr/bin",
+        );
+
+        final result = await service.getAliasesToMigrate();
+
+        expect(result.length, 1);
+        expect(result[0].name, 'test');
+        expect(result[0].command, 'echo hello\nworld');
+      });
+
+      test('parses mixed stress-test aliases', () async {
+        await rcFile.writeAsString('''
+# --- Alias migration stress test ---
+alias simple='echo simple'
+alias multi_single='echo hello
+world'
+alias multi_double="echo hello
+world"
+alias continuation=echo\\ hello\\
+world
+alias double_escapes="echo \\"quoted\\" and \\\\n literal"
+
+alias    spaced =   "echo spaced"
+''');
+
+        final result = await service.getAliasesToMigrate();
+        final aliasesByName = {for (final alias in result) alias.name: alias};
+
+        expect(aliasesByName['simple']?.command, 'echo simple');
+        expect(aliasesByName['multi_single']?.command, 'echo hello\nworld');
+        expect(aliasesByName['multi_double']?.command, 'echo hello\nworld');
+        expect(aliasesByName['continuation']?.command, 'echo hello\nworld');
+        expect(
+          aliasesByName['double_escapes']?.command,
+          'echo "quoted" and \\n literal',
+        );
+        expect(aliasesByName['spaced']?.command, 'echo spaced');
+      });
+
       test('ignores non-alias lines', () async {
         await rcFile.writeAsString('''
 # Comment
@@ -153,6 +194,75 @@ alias la='ls -a'
         expect(content, isNot(contains("alias la='ls -a'")));
         expect(content, contains('# Comment'));
         expect(content, contains('export PATH=/usr/bin'));
+      });
+
+      test(
+        'removes multiline aliases from RC file without leftovers',
+        () async {
+          await rcFile.writeAsString(
+            "alias test='echo hello\nworld'\nexport PATH=/usr/bin\n",
+          );
+
+          await service.migrateAliases();
+
+          final content = await rcFile.readAsString();
+          expect(content, isNot(contains("alias test='echo hello")));
+          expect(content, isNot(contains("world'")));
+          expect(content, contains('export PATH=/usr/bin'));
+
+          final aliasContent = await aliasFile.readAsString();
+          expect(aliasContent, contains('alias test="echo hello\nworld"'));
+        },
+      );
+
+      test('migrates stress-test aliases without RC leftovers', () async {
+        await rcFile.writeAsString('''
+# --- Alias migration stress test ---
+alias simple='echo simple'
+alias multi_single='echo hello
+world'
+alias multi_double="echo hello
+world"
+alias continuation=echo\\ hello\\
+world
+alias double_escapes="echo \\"quoted\\" and \\\\n literal"
+
+alias    spaced =   "echo spaced"
+''');
+
+        await service.migrateAliases();
+
+        final rcContent = await rcFile.readAsString();
+        expect(rcContent, contains('# --- Alias migration stress test ---'));
+        expect(rcContent, isNot(contains('alias simple=')));
+        expect(rcContent, isNot(contains('alias multi_single=')));
+        expect(rcContent, isNot(contains('alias multi_double=')));
+        expect(rcContent, isNot(contains('alias continuation=')));
+        expect(rcContent, isNot(contains('alias double_escapes=')));
+        expect(rcContent, isNot(contains('alias    spaced =')));
+        expect(rcContent, isNot(contains('world\'')));
+
+        final aliasContent = await aliasFile.readAsString();
+        expect(aliasContent, contains('alias simple="echo simple"'));
+        expect(
+          aliasContent,
+          contains('alias multi_single="echo hello\nworld"'),
+        );
+        expect(
+          aliasContent,
+          contains('alias multi_double="echo hello\nworld"'),
+        );
+        expect(
+          aliasContent,
+          contains('alias continuation="echo hello\nworld"'),
+        );
+        expect(
+          aliasContent,
+          contains(
+            'alias double_escapes="echo \\"quoted\\" and \\\\n literal"',
+          ),
+        );
+        expect(aliasContent, contains('alias spaced="echo spaced"'));
       });
 
       test('keeps conflicting aliases in RC file', () async {
