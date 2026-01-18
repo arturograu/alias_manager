@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:alias_manager/data/alias_service/alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,15 +12,26 @@ void main() {
   final testAlias = Alias(name: 'testAlias', command: 'echo test');
   late MockSystemCommandRunner systemCommandRunner;
   late ShellAliasSource shellAliasSource;
+  late Directory tempDir;
+  late String aliasFilePath;
 
-  setUp(() {
+  setUp(() async {
     systemCommandRunner = MockSystemCommandRunner();
-    shellAliasSource = ShellAliasSource(commandRunner: systemCommandRunner);
+    tempDir = await Directory.systemTemp.createTemp('alias_manager_test');
+    aliasFilePath = '${tempDir.path}/.bash_aliases';
+    shellAliasSource = ShellAliasSource(
+      commandRunner: systemCommandRunner,
+      aliasFile: aliasFilePath,
+    );
+  });
+
+  tearDown(() async {
+    await tempDir.delete(recursive: true);
   });
 
   group('ShellAliasSource', () {
     group('addAlias', () {
-      test('calls deleteAlias', () async {
+      test('ensures RC file sources bash_aliases first', () async {
         when(() => systemCommandRunner.run(any(), any())).thenAnswer(
           (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
         );
@@ -29,12 +42,34 @@ void main() {
           () => systemCommandRunner.run(captureAny(), captureAny()),
         ).captured;
 
+        // First call = check if RC file sources bash_aliases
         final executable = captured[0] as String;
         final args = captured[1] as List<String>;
 
         expect(executable, anyOf('bash', 'zsh'));
         expect(args[0], '-c');
+        expect(args[1], contains("grep -q 'if \\[ -f ~/.bash_aliases \\]'"));
+      });
+
+      test('calls deleteAlias before adding', () async {
+        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
+          (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
+        );
+
+        await shellAliasSource.addAlias(testAlias);
+
+        final captured = verify(
+          () => systemCommandRunner.run(captureAny(), captureAny()),
+        ).captured;
+
+        // Second call = delete alias from .bash_aliases
+        final executable = captured[2] as String;
+        final args = captured[3] as List<String>;
+
+        expect(executable, anyOf('bash', 'zsh'));
+        expect(args[0], '-c');
         expect(args[1], contains("sed -i '' '/alias ${testAlias.name}=/d'"));
+        expect(args[1], contains('.bash_aliases'));
       });
 
       test(
@@ -50,9 +85,9 @@ void main() {
             () => systemCommandRunner.run(captureAny(), captureAny()),
           ).captured;
 
-          // Second call = add alias
-          final executable = captured[2] as String;
-          final args = captured[3] as List<String>;
+          // Third call = add alias to .bash_aliases
+          final executable = captured[4] as String;
+          final args = captured[5] as List<String>;
 
           expect(executable, anyOf('bash', 'zsh'));
           expect(args[0], '-c');
@@ -62,6 +97,7 @@ void main() {
               "echo 'alias ${testAlias.name}=\"${testAlias.command}\"' >>",
             ),
           );
+          expect(args[1], contains('.bash_aliases'));
         },
       );
 
@@ -79,22 +115,15 @@ void main() {
     });
 
     group('getAliases', () {
-      test('returns an empty list when no aliases are found', () async {
-        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
-          (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
-        );
-
+      test('returns an empty list when file is missing', () async {
         final aliases = await shellAliasSource.getAliases();
 
         expect(aliases, isEmpty);
       });
 
-      test('returns a list of aliases from the shell', () async {
-        final mockOutput = "alias testAlias='echo test'\n";
-        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
-          (_) async =>
-              CommandResult(exitCode: 0, stdout: mockOutput, stderr: ''),
-        );
+      test('returns a list of aliases from the file', () async {
+        final file = File(aliasFilePath);
+        await file.writeAsString("alias testAlias='echo test'\n");
 
         final aliases = await shellAliasSource.getAliases();
 
@@ -103,12 +132,38 @@ void main() {
         expect(aliases[0].command, 'echo test');
       });
 
-      test('throws an exception if the command fails', () async {
-        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
-          (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+      test('parses multiline aliases and skips stray lines', () async {
+        final file = File(aliasFilePath);
+        await file.writeAsString(
+          [
+            'alias multi_single="echo hello',
+            'world"',
+            'alias simple="echo simple"',
+            'world"',
+          ].join('\n'),
         );
 
-        expect(() => shellAliasSource.getAliases(), throwsA(isA<Exception>()));
+        final aliases = await shellAliasSource.getAliases();
+
+        expect(aliases.length, 2);
+        expect(aliases[0].name, 'multi_single');
+        expect(aliases[0].command, 'echo hello\nworld');
+        expect(aliases[1].name, 'simple');
+        expect(aliases[1].command, 'echo simple');
+      });
+
+      test('handles escaped backslash before closing quote', () async {
+        final file = File(aliasFilePath);
+        await file.writeAsString(
+          r'alias backslash="echo \\"'
+          '\n',
+        );
+
+        final aliases = await shellAliasSource.getAliases();
+
+        expect(aliases.length, 1);
+        expect(aliases[0].name, 'backslash');
+        expect(aliases[0].command, r'echo \\');
       });
     });
 
@@ -120,7 +175,7 @@ void main() {
             (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
           );
 
-          await shellAliasSource.addAlias(testAlias);
+          await shellAliasSource.deleteAlias(testAlias.name);
 
           final captured = verify(
             () => systemCommandRunner.run(captureAny(), captureAny()),
@@ -132,6 +187,7 @@ void main() {
           expect(executable, anyOf('bash', 'zsh'));
           expect(args[0], '-c');
           expect(args[1], contains("sed -i '' '/alias ${testAlias.name}=/d'"));
+          expect(args[1], contains('.bash_aliases'));
         },
       );
 

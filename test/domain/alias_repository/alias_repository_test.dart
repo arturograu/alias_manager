@@ -1,3 +1,4 @@
+import 'package:alias_manager/data/alias_service/alias_migration_service.dart';
 import 'package:alias_manager/data/alias_service/alias_service.dart'
     as alias_service;
 import 'package:alias_manager/data/alias_service/git_alias_service.dart';
@@ -11,17 +12,22 @@ class MockGitAliasSource extends Mock implements GitAliasSource {}
 
 class MockShellAliasSource extends Mock implements ShellAliasSource {}
 
+class MockAliasMigrationService extends Mock implements AliasMigrationService {}
+
 void main() {
   late MockGitAliasSource mockGitAliasSource;
   late MockShellAliasSource mockShellAliasSource;
+  late MockAliasMigrationService mockMigrationService;
   late AliasRepository repository;
 
   setUp(() {
     mockGitAliasSource = MockGitAliasSource();
     mockShellAliasSource = MockShellAliasSource();
+    mockMigrationService = MockAliasMigrationService();
     repository = AliasRepository(
       gitAliasSource: mockGitAliasSource,
       shellAliasSource: mockShellAliasSource,
+      migrationService: mockMigrationService,
     );
   });
 
@@ -440,6 +446,130 @@ void main() {
             emitsDone,
           ]),
         );
+      });
+    });
+
+    group('hasAliasesToMigrate', () {
+      test('delegates to migration service', () async {
+        when(
+          () => mockMigrationService.hasAliasesToMigrate(),
+        ).thenAnswer((_) async => true);
+
+        final result = await repository.hasAliasesToMigrate();
+
+        expect(result, isTrue);
+        verify(() => mockMigrationService.hasAliasesToMigrate()).called(1);
+      });
+
+      test('returns false when no aliases to migrate', () async {
+        when(
+          () => mockMigrationService.hasAliasesToMigrate(),
+        ).thenAnswer((_) async => false);
+
+        final result = await repository.hasAliasesToMigrate();
+
+        expect(result, isFalse);
+      });
+
+      test('propagates errors from migration service', () async {
+        when(
+          () => mockMigrationService.hasAliasesToMigrate(),
+        ).thenThrow(Exception('Migration check failed'));
+
+        expect(
+          () => repository.hasAliasesToMigrate(),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
+    group('getAliasesToMigrate', () {
+      test('returns aliases from migration service as domain models', () async {
+        final sourceAliases = [
+          alias_service.Alias(name: 'll', command: 'ls -la'),
+          alias_service.Alias(name: 'la', command: 'ls -a'),
+        ];
+
+        when(
+          () => mockMigrationService.getAliasesToMigrate(),
+        ).thenAnswer((_) async => sourceAliases);
+
+        final result = await repository.getAliasesToMigrate();
+
+        expect(result.length, 2);
+        expect(result[0].name, 'll');
+        expect(result[0].type, AliasType.shell);
+        expect(result[1].name, 'la');
+        expect(result[1].type, AliasType.shell);
+      });
+
+      test('returns empty list when no aliases to migrate', () async {
+        when(
+          () => mockMigrationService.getAliasesToMigrate(),
+        ).thenAnswer((_) async => []);
+
+        final result = await repository.getAliasesToMigrate();
+
+        expect(result, isEmpty);
+      });
+
+      test('propagates errors from migration service', () async {
+        when(
+          () => mockMigrationService.getAliasesToMigrate(),
+        ).thenThrow(Exception('Failed to get aliases'));
+
+        expect(
+          () => repository.getAliasesToMigrate(),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
+    group('migrateAliases', () {
+      test('migrates aliases and refreshes the stream', () async {
+        final migratedAliases = [
+          alias_service.Alias(name: 'll', command: 'ls -la'),
+        ];
+
+        when(
+          () => mockMigrationService.migrateAliases(),
+        ).thenAnswer((_) async => migratedAliases);
+        when(() => mockGitAliasSource.getAliases()).thenAnswer((_) async => []);
+        when(
+          () => mockShellAliasSource.getAliases(),
+        ).thenAnswer((_) async => migratedAliases);
+
+        final result = await repository.migrateAliases();
+
+        expect(result.length, 1);
+        expect(result[0].name, 'll');
+        expect(result[0].type, AliasType.shell);
+
+        verify(() => mockMigrationService.migrateAliases()).called(1);
+        verify(() => mockGitAliasSource.getAliases()).called(1);
+        verify(() => mockShellAliasSource.getAliases()).called(1);
+      });
+
+      test('returns empty list when no aliases migrated', () async {
+        when(
+          () => mockMigrationService.migrateAliases(),
+        ).thenAnswer((_) async => []);
+        when(() => mockGitAliasSource.getAliases()).thenAnswer((_) async => []);
+        when(
+          () => mockShellAliasSource.getAliases(),
+        ).thenAnswer((_) async => []);
+
+        final result = await repository.migrateAliases();
+
+        expect(result, isEmpty);
+      });
+
+      test('propagates errors from migration service', () async {
+        when(
+          () => mockMigrationService.migrateAliases(),
+        ).thenThrow(Exception('Migration failed'));
+
+        expect(() => repository.migrateAliases(), throwsA(isA<Exception>()));
       });
     });
   });
