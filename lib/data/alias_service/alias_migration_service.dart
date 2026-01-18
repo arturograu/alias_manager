@@ -274,7 +274,7 @@ class _AliasParser {
     // Parsing rules (minimal, but sufficient for migration):
     // - Single quotes: literal, no escapes.
     // - Double quotes: backslash escapes the next char; "\<newline>" keeps newline.
-    // - Unquoted: backslash-newline continues the command.
+    // - Unquoted: backslash escapes the next char; "\<newline>" keeps newline.
     if (quoteChar == null) {
       return _readUnquotedCommand(content, start);
     }
@@ -316,9 +316,10 @@ class _AliasParser {
       if (char == '\n') {
         break;
       }
-      if (_isLineContinuation(content, index)) {
-        commandBuilder.write('\n');
-        index += 2;
+      if (char == r'\' && index + 1 < length) {
+        final escaped = _readEscapedUnquoted(content, index);
+        commandBuilder.write(escaped.value);
+        index = escaped.nextIndex;
         continue;
       }
       commandBuilder.write(char);
@@ -342,10 +343,17 @@ class _AliasParser {
     return _ReadResult(content[nextIndex], backslashIndex + 2);
   }
 
-  bool _isLineContinuation(String content, int index) {
-    return content[index] == r'\' &&
-        index + 1 < content.length &&
-        content[index + 1] == '\n';
+  _ReadResult _readEscapedUnquoted(String content, int backslashIndex) {
+    final nextIndex = backslashIndex + 1;
+    if (nextIndex >= content.length) {
+      return _ReadResult(r'\', backslashIndex + 1);
+    }
+
+    if (content[nextIndex] == '\n') {
+      return _ReadResult('\n', backslashIndex + 2);
+    }
+
+    return _ReadResult(content[nextIndex], backslashIndex + 2);
   }
 
   int _rangeEndAfterCommand(String content, int index) {
