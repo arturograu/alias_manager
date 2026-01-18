@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:alias_manager/data/alias_service/alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,10 +12,21 @@ void main() {
   final testAlias = Alias(name: 'testAlias', command: 'echo test');
   late MockSystemCommandRunner systemCommandRunner;
   late ShellAliasSource shellAliasSource;
+  late Directory tempDir;
+  late String aliasFilePath;
 
-  setUp(() {
+  setUp(() async {
     systemCommandRunner = MockSystemCommandRunner();
-    shellAliasSource = ShellAliasSource(commandRunner: systemCommandRunner);
+    tempDir = await Directory.systemTemp.createTemp('alias_manager_test');
+    aliasFilePath = '${tempDir.path}/.bash_aliases';
+    shellAliasSource = ShellAliasSource(
+      commandRunner: systemCommandRunner,
+      aliasFile: aliasFilePath,
+    );
+  });
+
+  tearDown(() async {
+    await tempDir.delete(recursive: true);
   });
 
   group('ShellAliasSource', () {
@@ -102,22 +115,15 @@ void main() {
     });
 
     group('getAliases', () {
-      test('returns an empty list when no aliases are found', () async {
-        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
-          (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
-        );
-
+      test('returns an empty list when file is missing', () async {
         final aliases = await shellAliasSource.getAliases();
 
         expect(aliases, isEmpty);
       });
 
-      test('returns a list of aliases from the shell', () async {
-        final mockOutput = "alias testAlias='echo test'\n";
-        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
-          (_) async =>
-              CommandResult(exitCode: 0, stdout: mockOutput, stderr: ''),
-        );
+      test('returns a list of aliases from the file', () async {
+        final file = File(aliasFilePath);
+        await file.writeAsString("alias testAlias='echo test'\n");
 
         final aliases = await shellAliasSource.getAliases();
 
@@ -126,12 +132,24 @@ void main() {
         expect(aliases[0].command, 'echo test');
       });
 
-      test('throws an exception if the command fails', () async {
-        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
-          (_) async => CommandResult(exitCode: 1, stdout: '', stderr: 'Error'),
+      test('parses multiline aliases and skips stray lines', () async {
+        final file = File(aliasFilePath);
+        await file.writeAsString(
+          [
+            'alias multi_single="echo hello',
+            'world"',
+            'alias simple="echo simple"',
+            'world"',
+          ].join('\n'),
         );
 
-        expect(() => shellAliasSource.getAliases(), throwsA(isA<Exception>()));
+        final aliases = await shellAliasSource.getAliases();
+
+        expect(aliases.length, 2);
+        expect(aliases[0].name, 'multi_single');
+        expect(aliases[0].command, 'echo hello\nworld');
+        expect(aliases[1].name, 'simple');
+        expect(aliases[1].command, 'echo simple');
       });
     });
 

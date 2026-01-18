@@ -1,13 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:alias_manager/data/alias_service/alias_service.dart';
 import 'package:system_command_runner/system_command_runner.dart';
 
 class ShellAliasSource implements AliasSource {
-  ShellAliasSource({SystemCommandRunner? commandRunner})
+  ShellAliasSource({SystemCommandRunner? commandRunner, String? aliasFile})
     : _commandRunner = commandRunner ?? const SystemCommandRunner(),
       _shell = _detectShell(),
-      _aliasFile = _detectAliasFile(),
+      _aliasFile = aliasFile ?? _detectAliasFile(),
       _rcFile = _detectRcFile();
 
   final SystemCommandRunner _commandRunner;
@@ -61,48 +62,97 @@ class ShellAliasSource implements AliasSource {
 
   @override
   Future<List<Alias>> getAliases() async {
-    // Source the alias file to get aliases
-    final sourceCmd =
-        "if [ -f $_aliasFile ]; then source $_aliasFile; fi && alias";
-    final (executable, arguments) = _buildCommand([sourceCmd]);
-    final result = await _commandRunner.run(executable, arguments);
-
-    if (_isInvalidExitCode(result.exitCode)) {
-      throw Exception('Failed to get aliases: ${result.stderr}');
+    final file = File(_aliasFile);
+    if (!await file.exists()) {
+      return [];
     }
 
-    final lines = result.stdout.toString().split('\n');
-    return _mapLinesIntoAliases(lines);
+    try {
+      final contents = await file.readAsString();
+      return _parseAliasFile(contents);
+    } catch (e) {
+      throw Exception('Failed to get aliases: $e');
+    }
   }
 
-  List<Alias> _mapLinesIntoAliases(List<String> lines) {
-    return lines
-        .where((line) => line.trim().isNotEmpty)
-        .map((line) {
-          line = line.trim();
+  List<Alias> _parseAliasFile(String contents) {
+    final aliases = <Alias>[];
+    final lines = const LineSplitter().convert(contents);
 
-          // Remove optional "alias " prefix
-          if (line.startsWith('alias ')) {
-            line = line.substring(6).trim();
-          }
+    String? pendingName;
+    String? pendingQuote;
+    final buffer = StringBuffer();
 
-          // Find the first '='
-          final eqIndex = line.indexOf('=');
-          if (eqIndex == -1) return null;
+    for (final line in lines) {
+      if (pendingName != null && pendingQuote != null) {
+        final closingIndex = _findClosingQuote(line, pendingQuote);
+        if (closingIndex != -1) {
+          buffer.write(line.substring(0, closingIndex));
+          aliases.add(Alias(name: pendingName, command: buffer.toString()));
+          pendingName = null;
+          pendingQuote = null;
+          buffer.clear();
+          continue;
+        }
 
-          final name = line.substring(0, eqIndex).trim();
-          var command = line.substring(eqIndex + 1).trim();
+        buffer.write(line);
+        buffer.write('\n');
+        continue;
+      }
 
-          // Remove surrounding quotes if they match
-          if ((command.startsWith('"') && command.endsWith('"')) ||
-              (command.startsWith("'") && command.endsWith("'"))) {
-            command = command.substring(1, command.length - 1);
-          }
+      final trimmedLeft = line.trimLeft();
+      if (!trimmedLeft.startsWith('alias ')) {
+        continue;
+      }
 
-          return Alias(name: name, command: command);
-        })
-        .whereType<Alias>()
-        .toList();
+      final aliasBody = trimmedLeft.substring(6);
+      final eqIndex = aliasBody.indexOf('=');
+      if (eqIndex == -1) {
+        continue;
+      }
+
+      final name = aliasBody.substring(0, eqIndex).trim();
+      if (name.isEmpty) {
+        continue;
+      }
+
+      final rawValue = aliasBody.substring(eqIndex + 1).trimRight();
+      if (rawValue.isEmpty) {
+        continue;
+      }
+
+      final firstChar = rawValue[0];
+      if (firstChar == '"' || firstChar == "'") {
+        final valueBody = rawValue.substring(1);
+        final closingIndex = _findClosingQuote(valueBody, firstChar);
+        if (closingIndex != -1) {
+          aliases.add(
+            Alias(name: name, command: valueBody.substring(0, closingIndex)),
+          );
+        } else {
+          pendingName = name;
+          pendingQuote = firstChar;
+          buffer.write(valueBody);
+          buffer.write('\n');
+        }
+        continue;
+      }
+
+      aliases.add(Alias(name: name, command: rawValue));
+    }
+
+    return aliases;
+  }
+
+  int _findClosingQuote(String value, String quote) {
+    for (var i = 0; i < value.length; i++) {
+      if (value[i] != quote) continue;
+      if (quote == '"' && i > 0 && value[i - 1] == r'\') {
+        continue;
+      }
+      return i;
+    }
+    return -1;
   }
 
   @override
