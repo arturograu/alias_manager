@@ -9,6 +9,7 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Alias Manager',
       theme: appTheme,
       themeMode: ThemeMode.light,
