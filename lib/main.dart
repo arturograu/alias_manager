@@ -1,3 +1,4 @@
+import 'package:alias_manager/data/alias_service/alias_migration_service.dart';
 import 'package:alias_manager/data/alias_service/git_alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
 import 'package:alias_manager/domain/alias_repository/alias_repository.dart';
@@ -20,6 +21,10 @@ final aliasRepositoryProvider = Provider<AliasRepository>((ref) {
   );
   ref.onDispose(repository.dispose);
   return repository;
+});
+
+final aliasMigrationServiceProvider = Provider<AliasMigrationService>((ref) {
+  return AliasMigrationService();
 });
 
 void main() {
