@@ -151,6 +151,20 @@ void main() {
         expect(aliases[1].name, 'simple');
         expect(aliases[1].command, 'echo simple');
       });
+
+      test('handles escaped backslash before closing quote', () async {
+        final file = File(aliasFilePath);
+        await file.writeAsString(
+          r'alias backslash="echo \\"'
+          '\n',
+        );
+
+        final aliases = await shellAliasSource.getAliases();
+
+        expect(aliases.length, 1);
+        expect(aliases[0].name, 'backslash');
+        expect(aliases[0].command, r'echo \\');
+      });
     });
 
     group('deleteAlias', () {

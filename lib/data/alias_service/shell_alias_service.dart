@@ -147,12 +147,23 @@ class ShellAliasSource implements AliasSource {
   int _findClosingQuote(String value, String quote) {
     for (var i = 0; i < value.length; i++) {
       if (value[i] != quote) continue;
-      if (quote == '"' && i > 0 && value[i - 1] == r'\') {
-        continue;
-      }
+      if (quote == '"' && _isEscapedByBackslash(value, i)) continue;
       return i;
     }
     return -1;
+  }
+
+  bool _isEscapedByBackslash(String value, int quoteIndex) {
+    if (quoteIndex == 0) return false;
+
+    var backslashCount = 0;
+    var i = quoteIndex - 1;
+    while (i >= 0 && value[i] == r'\') {
+      backslashCount++;
+      i--;
+    }
+
+    return backslashCount.isOdd;
   }
 
   @override
