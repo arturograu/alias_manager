@@ -118,9 +118,11 @@ class AliasMigrationService {
         .toSet();
     final parsedAliases = _AliasParser().parseWithRanges(content);
     final rangesToRemove = parsedAliases
-        .where((parsed) => aliasKeysToRemove.contains(
-              _aliasKey(parsed.alias.name, parsed.alias.command),
-            ))
+        .where(
+          (parsed) => aliasKeysToRemove.contains(
+            _aliasKey(parsed.alias.name, parsed.alias.command),
+          ),
+        )
         .toList();
 
     if (rangesToRemove.isEmpty) {
