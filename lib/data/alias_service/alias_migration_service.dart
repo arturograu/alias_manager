@@ -160,6 +160,7 @@ class AliasMigrationService {
   String _escapeCommandForAliasFile(String command) {
     return command
         .replaceAll('\\', r'\\')
+        .replaceAll('`', r'\`')
         .replaceAll(r'$', r'\$')
         .replaceAll('"', r'\"');
   }

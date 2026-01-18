@@ -131,6 +131,7 @@ class ShellAliasSource implements AliasSource {
     if (_isInvalidExitCode(checkResult.exitCode)) {
       final addCmd =
           '''
+
 cat >> $_rcFile << 'EOF'
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
