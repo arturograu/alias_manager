@@ -1,3 +1,4 @@
+import 'package:alias_manager/data/alias_service/alias_migration_service.dart';
 import 'package:alias_manager/data/alias_service/git_alias_service.dart';
 import 'package:alias_manager/data/alias_service/shell_alias_service.dart';
 import 'package:alias_manager/domain/alias_repository/models/models.dart';
@@ -7,11 +8,14 @@ class AliasRepository {
   AliasRepository({
     required GitAliasSource gitAliasSource,
     required ShellAliasSource shellAliasSource,
+    required AliasMigrationService migrationService,
   }) : _gitAliasSource = gitAliasSource,
-       _shellAliasSource = shellAliasSource;
+       _shellAliasSource = shellAliasSource,
+       _migrationService = migrationService;
 
   final ShellAliasSource _shellAliasSource;
   final GitAliasSource _gitAliasSource;
+  final AliasMigrationService _migrationService;
 
   final _aliasesSubject = BehaviorSubject.seeded(<Alias>[]);
 
@@ -52,5 +56,24 @@ class AliasRepository {
 
   void dispose() {
     _aliasesSubject.close();
+  }
+
+  Future<bool> hasAliasesToMigrate() async {
+    return await _migrationService.hasAliasesToMigrate();
+  }
+
+  Future<List<Alias>> getAliasesToMigrate() async {
+    final sourceAliases = await _migrationService.getAliasesToMigrate();
+    return sourceAliases
+        .map((e) => Alias.fromSourceAlias(e, type: AliasType.shell))
+        .toList();
+  }
+
+  Future<List<Alias>> migrateAliases() async {
+    final migratedAliases = await _migrationService.migrateAliases();
+    await fetchAliases();
+    return migratedAliases
+        .map((e) => Alias.fromSourceAlias(e, type: AliasType.shell))
+        .toList();
   }
 }

@@ -1,5 +1,4 @@
 import 'package:alias_manager/domain/alias_repository/models/alias.dart';
-import 'package:alias_manager/main.dart';
 import 'package:alias_manager/presentation/add_alias/view/add_alias_form.dart';
 import 'package:alias_manager/presentation/app/theme/app_theme.dart';
 import 'package:alias_manager/presentation/app/widgets/widgets.dart';
@@ -7,6 +6,7 @@ import 'package:alias_manager/presentation/home/state/home_notifier.dart';
 import 'package:alias_manager/presentation/home/view/alias_list.dart';
 import 'package:alias_manager/presentation/home/view/alias_type_selector.dart';
 import 'package:alias_manager/presentation/main_bar/view/main_bar.dart';
+import 'package:alias_manager/presentation/migration/state/migration_notifier.dart';
 import 'package:alias_manager/presentation/migration/view/migration_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,13 +19,12 @@ class AliasListPage extends ConsumerStatefulWidget {
 }
 
 class _AliasListPageState extends ConsumerState<AliasListPage> {
-  bool _hasCheckedMigration = false;
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Check for migration after the first frame, only once
-    if (!_hasCheckedMigration) {
+    final migrationState = ref.read(migrationNotifierProvider);
+    if (migrationState.status == MigrationStatus.initial) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _checkMigration();
       });
@@ -33,42 +32,48 @@ class _AliasListPageState extends ConsumerState<AliasListPage> {
   }
 
   Future<void> _checkMigration() async {
-    if (_hasCheckedMigration) return;
-    _hasCheckedMigration = true;
+    final migrationNotifier = ref.read(migrationNotifierProvider.notifier);
+    final migrationState = ref.read(migrationNotifierProvider);
 
-    final migrationService = ref.read(aliasMigrationServiceProvider);
-    final hasAliasesToMigrate = await migrationService.hasAliasesToMigrate();
+    if (migrationState.status != MigrationStatus.initial) return;
 
-    if (!mounted || !hasAliasesToMigrate) return;
+    try {
+      await migrationNotifier.checkForMigration();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to check for migration: $e')),
+        );
+      }
+      return;
+    }
 
-    final aliasesToMigrate = await migrationService.getAliasesToMigrate();
-    if (!mounted || aliasesToMigrate.isEmpty) return;
+    if (!mounted) return;
+
+    final updatedState = ref.read(migrationNotifierProvider);
+    if (updatedState.aliasesToMigrate.isEmpty) return;
 
     final shouldMigrate = await MigrationDialog.show(
       context,
-      aliases: aliasesToMigrate,
+      aliases: updatedState.aliasesToMigrate,
     );
 
     if (!mounted) return;
 
     if (shouldMigrate == true) {
       try {
-        await migrationService.migrateAliases();
+        await migrationNotifier.migrateAliases();
         // Refresh aliases after migration
         ref.invalidate(homeNotifierProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Aliases migrated successfully!'),
-            ),
+            const SnackBar(content: Text('Aliases migrated successfully!')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to migrate aliases: $e'),
-            ),
+            SnackBar(content: Text('Failed to migrate aliases: $e')),
           );
         }
       }

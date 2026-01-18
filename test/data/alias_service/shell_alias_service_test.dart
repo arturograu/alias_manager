@@ -18,7 +18,7 @@ void main() {
 
   group('ShellAliasSource', () {
     group('addAlias', () {
-      test('calls deleteAlias', () async {
+      test('ensures RC file sources bash_aliases first', () async {
         when(() => systemCommandRunner.run(any(), any())).thenAnswer(
           (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
         );
@@ -29,12 +29,34 @@ void main() {
           () => systemCommandRunner.run(captureAny(), captureAny()),
         ).captured;
 
+        // First call = check if RC file sources bash_aliases
         final executable = captured[0] as String;
         final args = captured[1] as List<String>;
 
         expect(executable, anyOf('bash', 'zsh'));
         expect(args[0], '-c');
+        expect(args[1], contains("grep -q 'if \\[ -f ~/.bash_aliases \\]'"));
+      });
+
+      test('calls deleteAlias before adding', () async {
+        when(() => systemCommandRunner.run(any(), any())).thenAnswer(
+          (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
+        );
+
+        await shellAliasSource.addAlias(testAlias);
+
+        final captured = verify(
+          () => systemCommandRunner.run(captureAny(), captureAny()),
+        ).captured;
+
+        // Second call = delete alias from .bash_aliases
+        final executable = captured[2] as String;
+        final args = captured[3] as List<String>;
+
+        expect(executable, anyOf('bash', 'zsh'));
+        expect(args[0], '-c');
         expect(args[1], contains("sed -i '' '/alias ${testAlias.name}=/d'"));
+        expect(args[1], contains('.bash_aliases'));
       });
 
       test(
@@ -50,9 +72,9 @@ void main() {
             () => systemCommandRunner.run(captureAny(), captureAny()),
           ).captured;
 
-          // Second call = add alias
-          final executable = captured[2] as String;
-          final args = captured[3] as List<String>;
+          // Third call = add alias to .bash_aliases
+          final executable = captured[4] as String;
+          final args = captured[5] as List<String>;
 
           expect(executable, anyOf('bash', 'zsh'));
           expect(args[0], '-c');
@@ -62,6 +84,7 @@ void main() {
               "echo 'alias ${testAlias.name}=\"${testAlias.command}\"' >>",
             ),
           );
+          expect(args[1], contains('.bash_aliases'));
         },
       );
 
@@ -120,7 +143,7 @@ void main() {
             (_) async => CommandResult(exitCode: 0, stdout: '', stderr: ''),
           );
 
-          await shellAliasSource.addAlias(testAlias);
+          await shellAliasSource.deleteAlias(testAlias.name);
 
           final captured = verify(
             () => systemCommandRunner.run(captureAny(), captureAny()),
@@ -132,6 +155,7 @@ void main() {
           expect(executable, anyOf('bash', 'zsh'));
           expect(args[0], '-c');
           expect(args[1], contains("sed -i '' '/alias ${testAlias.name}=/d'"));
+          expect(args[1], contains('.bash_aliases'));
         },
       );
 

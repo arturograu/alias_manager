@@ -4,9 +4,9 @@ import 'package:alias_manager/data/alias_service/alias_service.dart';
 
 /// Service to migrate aliases from RC files (.bashrc/.zshrc) to .bash_aliases
 class AliasMigrationService {
-  AliasMigrationService()
-    : _rcFile = _detectRcFile(),
-      _aliasFile = _detectAliasFile();
+  AliasMigrationService({String? rcFilePath, String? aliasFilePath})
+    : _rcFile = rcFilePath ?? _detectRcFile(),
+      _aliasFile = aliasFilePath ?? _detectAliasFile();
 
   final String _rcFile;
   final String _aliasFile;
@@ -113,7 +113,7 @@ class AliasMigrationService {
     await _removeAliasesFromRcFile(aliases);
     await _ensureRcFileSourcesAliasFile();
 
-    return aliases;
+    return aliasesToAdd;
   }
 
   /// Parses aliases from file content

@@ -1,4 +1,4 @@
-import 'package:alias_manager/data/alias_service/alias_service.dart';
+import 'package:alias_manager/domain/alias_repository/models/alias.dart';
 import 'package:flutter/material.dart';
 
 class MigrationDialog extends StatelessWidget {
