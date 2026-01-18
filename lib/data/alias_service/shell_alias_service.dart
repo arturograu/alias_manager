@@ -62,7 +62,8 @@ class ShellAliasSource implements AliasSource {
   @override
   Future<List<Alias>> getAliases() async {
     // Source the alias file to get aliases
-    final sourceCmd = "if [ -f $_aliasFile ]; then source $_aliasFile; fi && alias";
+    final sourceCmd =
+        "if [ -f $_aliasFile ]; then source $_aliasFile; fi && alias";
     final (executable, arguments) = _buildCommand([sourceCmd]);
     final result = await _commandRunner.run(executable, arguments);
 
@@ -108,7 +109,8 @@ class ShellAliasSource implements AliasSource {
   Future<void> deleteAlias(String name) async {
     // Remove any line starting with alias <name>= from the alias file
     // -i '' is for in-place editing (macOS/BSD sed syntax)
-    final removeCmd = "if [ -f $_aliasFile ]; then sed -i '' '/alias $name=/d' $_aliasFile; fi";
+    final removeCmd =
+        "if [ -f $_aliasFile ]; then sed -i '' '/alias $name=/d' $_aliasFile; fi";
 
     final (executable, arguments) = _buildCommand([removeCmd]);
     final result = await _commandRunner.run(executable, arguments);
@@ -127,7 +129,8 @@ class ShellAliasSource implements AliasSource {
 
     // If the sourcing block doesn't exist (grep returns non-zero), add it
     if (_isInvalidExitCode(checkResult.exitCode)) {
-      final addCmd = '''
+      final addCmd =
+          '''
 cat >> $_rcFile << 'EOF'
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
@@ -138,7 +141,9 @@ EOF
       final addResult = await _commandRunner.run(addExecutable, addArguments);
 
       if (_isInvalidExitCode(addResult.exitCode)) {
-        throw Exception('Failed to ensure RC file sources alias file: ${addResult.stderr}');
+        throw Exception(
+          'Failed to ensure RC file sources alias file: ${addResult.stderr}',
+        );
       }
     }
   }
