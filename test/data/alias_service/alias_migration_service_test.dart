@@ -129,6 +129,15 @@ alias la='ls -a'
         expect(content, contains('alias la="ls -a"'));
       });
 
+      test('escapes double quotes in migrated commands', () async {
+        await rcFile.writeAsString('alias test=\'echo "hello"\'');
+
+        await service.migrateAliases();
+
+        final content = await aliasFile.readAsString();
+        expect(content, contains('alias test="echo \\"hello\\""'));
+      });
+
       test('removes aliases from RC file', () async {
         await rcFile.writeAsString('''
 # Comment
@@ -144,6 +153,17 @@ alias la='ls -a'
         expect(content, isNot(contains("alias la='ls -a'")));
         expect(content, contains('# Comment'));
         expect(content, contains('export PATH=/usr/bin'));
+      });
+
+      test('keeps conflicting aliases in RC file', () async {
+        await aliasFile.writeAsString('alias ll="ls -lah"');
+        await rcFile.writeAsString('alias ll=\'ls -la\'\nalias la=\'ls -a\'');
+
+        await service.migrateAliases();
+
+        final content = await rcFile.readAsString();
+        expect(content, contains("alias ll='ls -la'"));
+        expect(content, isNot(contains("alias la='ls -a'")));
       });
 
       test('adds sourcing block to RC file', () async {

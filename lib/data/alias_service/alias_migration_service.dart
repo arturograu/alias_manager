@@ -60,8 +60,9 @@ class AliasMigrationService {
         var command = aliasLine.substring(eqIndex + 1).trim();
 
         // Remove surrounding quotes if they match
-        if ((command.startsWith('"') && command.endsWith('"')) ||
-            (command.startsWith("'") && command.endsWith("'"))) {
+        if (command.length > 1 &&
+            ((command.startsWith('"') && command.endsWith('"')) ||
+                (command.startsWith("'") && command.endsWith("'")))) {
           command = command.substring(1, command.length - 1);
         }
 
@@ -90,7 +91,10 @@ class AliasMigrationService {
     // Append aliases to .bash_aliases file
     final aliasFileContent = await aliasFile.readAsString();
     final existingAliases = _parseAliasesFromContent(aliasFileContent);
-    final existingAliasNames = existingAliases.map((a) => a.name).toSet();
+    final existingAliasesByName = {
+      for (final alias in existingAliases) alias.name: alias,
+    };
+    final existingAliasNames = existingAliasesByName.keys.toSet();
 
     // Only add aliases that don't already exist in .bash_aliases
     final aliasesToAdd = aliases
@@ -104,13 +108,21 @@ class AliasMigrationService {
         buffer.write('\n');
       }
       for (final alias in aliasesToAdd) {
-        buffer.writeln("alias ${alias.name}=\"${alias.command}\"");
+        final escapedCommand = _escapeCommandForAliasFile(alias.command);
+        buffer.writeln("alias ${alias.name}=\"$escapedCommand\"");
       }
 
       await aliasFile.writeAsString(buffer.toString(), mode: FileMode.append);
     }
 
-    await _removeAliasesFromRcFile(aliases);
+    final aliasesToRemoveFromRcFile = [
+      ...aliasesToAdd,
+      ...aliases.where((alias) {
+        final existing = existingAliasesByName[alias.name];
+        return existing != null && existing.command == alias.command;
+      }),
+    ];
+    await _removeAliasesFromRcFile(aliasesToRemoveFromRcFile);
     await _ensureRcFileSourcesAliasFile();
 
     return aliasesToAdd;
@@ -130,8 +142,9 @@ class AliasMigrationService {
         final name = aliasLine.substring(0, eqIndex).trim();
         var command = aliasLine.substring(eqIndex + 1).trim();
 
-        if ((command.startsWith('"') && command.endsWith('"')) ||
-            (command.startsWith("'") && command.endsWith("'"))) {
+        if (command.length > 1 &&
+            ((command.startsWith('"') && command.endsWith('"')) ||
+                (command.startsWith("'") && command.endsWith("'")))) {
           command = command.substring(1, command.length - 1);
         }
 
@@ -187,5 +200,9 @@ class AliasMigrationService {
     final sourceBlock =
         '\nif [ -f ~/.bash_aliases ]; then\n    . ~/.bash_aliases\nfi\n';
     await rcFile.writeAsString('$content$sourceBlock');
+  }
+
+  String _escapeCommandForAliasFile(String command) {
+    return command.replaceAll('"', r'\"');
   }
 }
